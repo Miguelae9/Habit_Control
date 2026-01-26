@@ -32,11 +32,12 @@ class MyApp extends StatelessWidget {
         ),
       ),
 
-      initialRoute: '/home', // Pantalla inicial con rutas nombradas
+      initialRoute: '/splash', // Pantalla inicial con rutas nombradas
 
       // Rutas disponibles en la app
       routes: {
         '/home': (context) => const HomeScreen(),
+        '/splash': (context) => const SplashScreen(),
       },
     );
   }
