@@ -10,22 +10,61 @@ class LateralMenu extends StatelessWidget {
       children: <Widget>[
         const UserAccountsDrawerHeader(
           accountName: Text(
-            "Miguel Ángel Pérez García",
+            "",
             style: TextStyle(color: Color.fromARGB(255, 255, 230, 2)),
           ),
           accountEmail: Text(
-            "Relación de Ejercicios Tema 1",
-            style: TextStyle(color: Color.fromARGB(255, 255, 230, 2)),
+            "HABIT CONTROL",
+            style: TextStyle(color: Color.fromARGB(255, 255, 255, 255)),
           ),
         ),
 
         Ink(
-          color: const Color.fromARGB(255, 247, 114, 180),
+          color: const Color.fromARGB(255, 68, 93, 122),
           child: ListTile(
             title: const Text("Dashboard"),
             onTap: () {
               Navigator.of(context).pop();
-              Navigator.pushReplacementNamed(context, '/home');
+              Navigator.pushReplacementNamed(context, '/dashboard');
+            },
+          ),
+        ),
+
+        const SizedBox(height: 3),
+
+        Ink(
+          color: const Color.fromARGB(255, 68, 93, 122),
+          child: ListTile(
+            title: const Text("Data Logging"),
+            onTap: () {
+              Navigator.of(context).pop();
+              Navigator.pushReplacementNamed(context, '/data_logging');
+            },
+          ),
+        ),
+
+        const SizedBox(height: 3),
+
+        Ink(
+          color: const Color.fromARGB(255, 68, 93, 122),
+          child: ListTile(
+            title: const Text("Analytics"),
+            onTap: () {
+              Navigator.of(context).pop();
+              Navigator.pushReplacementNamed(context, '/analytics');
+            },
+          ),
+        ),
+
+        const SizedBox(height: 3),
+
+        Ink(
+          color: const Color.fromARGB(255, 68, 93, 122),
+          child: ListTile(
+            title: const Text("About"),
+            onTap: () {
+              Navigator.of(context).pop();
+              Navigator.pushReplacementNamed(context, '/credits');
             },
           ),
         ),

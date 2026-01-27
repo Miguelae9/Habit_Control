@@ -1,0 +1,216 @@
+import 'package:flutter/material.dart';
+
+class InputLogScreen extends StatelessWidget {
+  const InputLogScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFF0B0F14),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Top bar: menu + online
+              Row(
+                children: const [
+                  Icon(Icons.menu, color: Color(0xFFE5E7EB)),
+                  Spacer(),
+                  _OnlineBadge(),
+                ],
+              ),
+
+              const SizedBox(height: 26),
+
+              const Text(
+                'MÉTRICAS DIARIAS',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 26,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 2,
+                  color: Color(0xFFE5E7EB),
+                ),
+              ),
+              const SizedBox(height: 10),
+              const Text(
+                'INTRODUCE DATOS PARA CÁLCULO',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 11,
+                  letterSpacing: 2,
+                  color: Color(0xFF9CA3AF),
+                ),
+              ),
+
+              const SizedBox(height: 28),
+
+              const _MetricRow(
+                label: '> HORAS DE SUEÑO',
+                value: '7h 40m',
+              ),
+              const SizedBox(height: 22),
+
+              const _MetricRow(
+                label: '> NIVEL DE ENERGÍA',
+                value: '85%',
+              ),
+              const SizedBox(height: 22),
+
+              const _MetricRow(
+                label: '> TIEMPO DE RRSS',
+                value: '4h 30m',
+              ),
+
+              const Spacer(),
+
+              SizedBox(
+                height: 52,
+                child: ElevatedButton(
+                  onPressed: () {},
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF6CFAFF),
+                    foregroundColor: const Color(0xFF0B0F14),
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                  child: const Text(
+                    'GUARDAR REGISTRO',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 1.4,
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _OnlineBadge extends StatelessWidget {
+  const _OnlineBadge();
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: const [
+        _Dot(color: Color(0xFF22C55E)),
+        SizedBox(width: 6),
+        Text(
+          'ONLINE',
+          style: TextStyle(
+            color: Color(0xFFE5E7EB),
+            fontSize: 11,
+            letterSpacing: 1.6,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _Dot extends StatelessWidget {
+  final Color color;
+  const _Dot({required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 7,
+      height: 7,
+      decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+    );
+  }
+}
+
+class _MetricRow extends StatelessWidget {
+  final String label;
+  final String value;
+
+  const _MetricRow({
+    required this.label,
+    required this.value,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Text(
+          label,
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            fontSize: 12,
+            letterSpacing: 1.8,
+            color: Color(0xFFE5E7EB),
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(height: 14),
+        Row(
+          children: [
+            const _StepButton(kind: _StepKind.minus),
+            const SizedBox(width: 18),
+            Expanded(
+              child: Center(
+                child: Text(
+                  value,
+                  style: const TextStyle(
+                    fontSize: 34,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 2,
+                    color: Color(0xFF7C8796),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 18),
+            const _StepButton(kind: _StepKind.plus),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+enum _StepKind { minus, plus }
+
+class _StepButton extends StatelessWidget {
+  final _StepKind kind;
+  const _StepButton({required this.kind});
+
+  @override
+  Widget build(BuildContext context) {
+    const accent = Color(0xFF6CFAFF);
+    final isPlus = kind == _StepKind.plus;
+
+    return SizedBox(
+      width: 54,
+      height: 54,
+      child: OutlinedButton(
+        onPressed: () {},
+        style: OutlinedButton.styleFrom(
+          side: BorderSide(color: isPlus ? accent : const Color(0xFF64748B)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(4),
+          ),
+          padding: EdgeInsets.zero,
+        ),
+        child: Icon(
+          isPlus ? Icons.add : Icons.remove,
+          color: isPlus ? accent : const Color(0xFF9CA3AF),
+          size: 22,
+        ),
+      ),
+    );
+  }
+}
