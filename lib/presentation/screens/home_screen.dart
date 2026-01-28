@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:habit_control/presentation/screens/analytics.dart';
 import 'package:habit_control/presentation/screens/credits.dart';
 import 'package:habit_control/presentation/screens/dashboard.dart';
-import 'package:habit_control/presentation/screens/input_log';
+import 'package:habit_control/presentation/screens/input_log.dart';
 import 'package:habit_control/presentation/screens/splash.dart';
 // Import único de todas las pantallas
 
@@ -62,7 +62,7 @@ class MyApp extends StatelessWidget {
         ),
       ),
 
-      initialRoute: '/credits', // Pantalla inicial con rutas nombradas
+      initialRoute: '/splash', // Pantalla inicial con rutas nombradas
       // Rutas disponibles en la app
       routes: {
         '/home': (context) => const HomeScreen(),
@@ -93,10 +93,7 @@ class HomeScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const SizedBox(height: 14),
-
-                  // TODO: aquí va la imagen/logo (icono del cerebro)
-                  // Center(child: Image.asset('assets/logo.png', width: 84, height: 84)),
+                  Center(child: Image.asset('assets/imgs/habit_control_logo.png', width: 130, height: 130)),
                   const SizedBox(height: 18),
 
                   const Text(
@@ -141,7 +138,9 @@ class HomeScreen extends StatelessWidget {
                   SizedBox(
                     height: 52,
                     child: ElevatedButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        Navigator.pushReplacementNamed(context, '/dashboard');
+                      },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF6CFAFF),
                         foregroundColor: const Color(0xFF0B0F14),

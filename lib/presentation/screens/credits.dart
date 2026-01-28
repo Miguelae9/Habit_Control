@@ -7,7 +7,7 @@ class CreditsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(backgroundColor: const Color(0xFF0B0F14)),
+      // Menú lateral
       drawer: const Drawer(
         backgroundColor: Color.fromARGB(34, 0, 70, 221),
         child: LateralMenu(),
@@ -19,6 +19,23 @@ class CreditsScreen extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
           child: Column(
             children: [
+              Row(
+                children: [
+                  // Para abrir el drawer necesitamos un Builder
+                  Builder(
+                    builder: (context) {
+                      return IconButton(
+                        icon: const Icon(Icons.menu, color: Color(0xFFE5E7EB)),
+                        onPressed: () {
+                          Scaffold.of(context).openDrawer();
+                        },
+                      );
+                    },
+                  ),
+                  const Spacer(),
+                ],
+              ),
+
               const SizedBox(height: 24),
 
               const Text(

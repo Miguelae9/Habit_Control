@@ -1,87 +1,148 @@
 import 'package:flutter/material.dart';
+import 'package:percent_indicator/percent_indicator.dart';
+import 'package:habit_control/presentation/screens/lateral_menu.dart';
 
-class DashboardScreen extends StatelessWidget {
+class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
 
   @override
+  State<DashboardScreen> createState() => _DashboardScreenState();
+}
+
+class _DashboardScreenState extends State<DashboardScreen> {
+  // Lista de hábitos
+  final List<Habit> habits = [
+    Habit('GIMNASIO', 'RACHA: 4 DÍAS', true),
+    Habit('LECTURA', 'RACHA: 15 DÍAS', true),
+    Habit('MEDITACIÓN', 'RACHA: 2 DÍAS', false),
+    Habit('DORMIR 8\nHORAS', 'RACHA: 5 DÍAS', false),
+    Habit('AGUA', 'RACHA: 3 DÍAS', true),
+    Habit('CORRER', 'RACHA: 1 DÍA', false),
+  ];
+
+  // Función para marcar/desmarcar
+  void toggleHabit(int index) {
+    setState(() {
+      habits[index].active = !habits[index].active;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      backgroundColor: Color(0xFF0B0F14),
+    // 1. CÁLCULOS
+    final int total = habits.length;
+    final int completados = habits.where((h) => h.active).length;
+    final double progresoDecimal = total == 0 ? 0.0 : (completados / total);
+    final int porcentajeTexto = (progresoDecimal * 100).toInt();
+
+    return Scaffold(
+      backgroundColor: const Color(0xFF0B0F14),
+
+      drawer: const Drawer(
+        backgroundColor: Color.fromARGB(34, 0, 70, 221),
+        child: LateralMenu(),
+      ),
+
       body: SafeArea(
         child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Top bar: menu + online
-              Row(
-                children: [
-                  Icon(Icons.menu, color: Color(0xFFE5E7EB)),
-                  Spacer(),
-                  _OnlineBadge(),
-                ],
-              ),
-
-              SizedBox(height: 16),
-
-              // Circular % ring
-              Center(
-                child: _ProbabilityRing(
-                  size: 210,
-                  progress: 0.84,
-                  valueText: '84%',
-                  label: 'PROBABILIDAD',
-                ),
-              ),
-
-              SizedBox(height: 18),
-
-              // Weather card
-              _WeatherCard(
-                city: 'MÁLAGA, ES',
-                temp: '18°C',
-                status: 'ÓPTIMO',
-                hum: '45%',
-                wind: '12km/h',
-              ),
-
-              SizedBox(height: 14),
-
-              // Habits list
-              Expanded(
-                child: Column(
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // HEADER
+                Row(
                   children: [
-                    _HabitTile(
-                      title: 'GIMNASIO',
-                      streak: 'RACHA: 4 DÍAS',
-                      active: true,
-                      accent: Color(0xFF6CFAFF),
+                    Builder(
+                      builder: (context) {
+                        return IconButton(
+                          icon: const Icon(
+                            Icons.menu,
+                            color: Color(0xFFE5E7EB),
+                          ),
+                          onPressed: () => Scaffold.of(context).openDrawer(),
+                        );
+                      },
                     ),
-                    SizedBox(height: 10),
-                    _HabitTile(
-                      title: 'LECTURA',
-                      streak: 'RACHA: 15 DÍAS',
-                      active: true,
-                      accent: Color(0xFF6CFAFF),
-                    ),
-                    SizedBox(height: 10),
-                    _HabitTile(
-                      title: 'MEDITACIÓN',
-                      streak: 'RACHA: 2 DÍAS',
-                      active: false,
-                      accent: Color(0xFF93A3B8),
-                    ),
-                    SizedBox(height: 10),
-                    _HabitTile(
-                      title: 'DORMIR 8\nHORAS',
-                      streak: 'RACHA: 5 DÍAS',
-                      active: false,
-                      accent: Color(0xFF93A3B8),
-                    ),
+                    const Spacer(),
+                    const OnlineBadge(),
                   ],
                 ),
-              ),
-            ],
+
+                const SizedBox(height: 20),
+
+                // RING
+                Center(
+                  child: CircularPercentIndicator(
+                    radius: 105.0,
+                    lineWidth: 14.0,
+                    percent: progresoDecimal,
+
+                    // --- AQUÍ ESTÁ EL ARREGLO ---
+                    animation: true,
+                    animateFromLastPercent:
+                        true, // Esto evita que empiece de 0 cada vez
+                    animationDuration:
+                        600, // Un poco más rápido para que se sienta ágil
+
+                    // ---------------------------
+                    circularStrokeCap: CircularStrokeCap.round,
+                    backgroundColor: const Color(0xFF1E293B),
+                    progressColor: const Color(0xFF6CFAFF),
+                    center: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          '$porcentajeTexto%',
+                          style: const TextStyle(
+                            fontSize: 44,
+                            fontWeight: FontWeight.w800,
+                            color: Color(0xFFE5E7EB),
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        const Text(
+                          'COMPLETADO',
+                          style: TextStyle(
+                            fontSize: 11,
+                            letterSpacing: 2.0,
+                            color: Color(0xFF9CA3AF),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 30),
+
+                // WEATHER
+                const WeatherCard(
+                  city: 'MÁLAGA, ES',
+                  temp: '18°C',
+                  status: 'ÓPTIMO',
+                  hum: '45%',
+                  wind: '12km/h',
+                ),
+
+                const SizedBox(height: 30),
+
+                // LISTA DE HÁBITOS
+                for (int i = 0; i < habits.length; i++) ...[
+                  HabitTile(
+                    title: habits[i].title,
+                    streak: habits[i].streak,
+                    active: habits[i].active,
+                    // Color dinámico de la barrita y el borde
+                    accent: habits[i].active
+                        ? const Color(0xFF6CFAFF)
+                        : const Color(0xFF93A3B8),
+                    onTap: () => toggleHabit(i),
+                  ),
+                  const SizedBox(height: 10),
+                ],
+              ],
+            ),
           ),
         ),
       ),
@@ -89,14 +150,26 @@ class DashboardScreen extends StatelessWidget {
   }
 }
 
-class _OnlineBadge extends StatelessWidget {
-  const _OnlineBadge();
+/* ------------------ MODELO SIMPLE ------------------ */
+
+class Habit {
+  final String title;
+  final String streak;
+  bool active;
+
+  Habit(this.title, this.streak, this.active);
+}
+
+/* ------------------ WIDGETS UI ------------------ */
+
+class OnlineBadge extends StatelessWidget {
+  const OnlineBadge({super.key});
 
   @override
   Widget build(BuildContext context) {
     return const Row(
       children: [
-        _Dot(color: Color(0xFF22C55E)),
+        Dot(color: Color(0xFF22C55E)),
         SizedBox(width: 6),
         Text(
           'ONLINE',
@@ -111,9 +184,9 @@ class _OnlineBadge extends StatelessWidget {
   }
 }
 
-class _Dot extends StatelessWidget {
+class Dot extends StatelessWidget {
   final Color color;
-  const _Dot({required this.color});
+  const Dot({super.key, required this.color});
 
   @override
   Widget build(BuildContext context) {
@@ -125,121 +198,15 @@ class _Dot extends StatelessWidget {
   }
 }
 
-class _ProbabilityRing extends StatelessWidget {
-  final double size;
-  final double progress; // 0..1
-  final String valueText;
-  final String label;
-
-  const _ProbabilityRing({
-    required this.size,
-    required this.progress,
-    required this.valueText,
-    required this.label,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: size,
-      height: size,
-      child: CustomPaint(
-        painter: _RingPainter(
-          progress: progress,
-          bg: const Color(0xFF1E293B),
-          fg: const Color(0xFF6CFAFF),
-          stroke: 14,
-        ),
-        child: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                valueText,
-                style: const TextStyle(
-                  fontSize: 44,
-                  fontWeight: FontWeight.w800,
-                  color: Color(0xFFE5E7EB),
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                label,
-                style: const TextStyle(
-                  fontSize: 11,
-                  letterSpacing: 2.0,
-                  color: Color(0xFF9CA3AF),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _RingPainter extends CustomPainter {
-  final double progress;
-  final Color bg;
-  final Color fg;
-  final double stroke;
-
-  _RingPainter({
-    required this.progress,
-    required this.bg,
-    required this.fg,
-    required this.stroke,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2, size.height / 2);
-    final radius = (size.shortestSide - stroke) / 2;
-
-    final bgPaint = Paint()
-      ..color = bg
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = stroke
-      ..strokeCap = StrokeCap.butt;
-
-    final fgPaint = Paint()
-      ..color = fg
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = stroke
-      ..strokeCap = StrokeCap.butt;
-
-    // Start at top (12 o'clock)
-    const start = -1.57079632679; // -pi/2
-    final sweep = 6.28318530718 * progress; // 2*pi*progress
-
-    canvas.drawCircle(center, radius, bgPaint);
-    canvas.drawArc(
-      Rect.fromCircle(center: center, radius: radius),
-      start,
-      sweep,
-      false,
-      fgPaint,
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant _RingPainter oldDelegate) {
-    return oldDelegate.progress != progress ||
-        oldDelegate.bg != bg ||
-        oldDelegate.fg != fg ||
-        oldDelegate.stroke != stroke;
-  }
-}
-
-class _WeatherCard extends StatelessWidget {
+class WeatherCard extends StatelessWidget {
   final String city;
   final String temp;
   final String status;
   final String hum;
   final String wind;
 
-  const _WeatherCard({
+  const WeatherCard({
+    super.key,
     required this.city,
     required this.temp,
     required this.status,
@@ -258,13 +225,13 @@ class _WeatherCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          // Left: icon + city + temp/status
           const Icon(
             Icons.wb_sunny_outlined,
             color: Color(0xFF6CFAFF),
             size: 20,
           ),
           const SizedBox(width: 10),
+
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -291,7 +258,6 @@ class _WeatherCard extends StatelessWidget {
             ),
           ),
 
-          // Right: hum/wind
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
@@ -320,68 +286,76 @@ class _WeatherCard extends StatelessWidget {
   }
 }
 
-class _HabitTile extends StatelessWidget {
+class HabitTile extends StatelessWidget {
   final String title;
   final String streak;
   final bool active;
   final Color accent;
+  final VoidCallback onTap;
 
-  const _HabitTile({
+  const HabitTile({
+    super.key,
     required this.title,
     required this.streak,
     required this.active,
     required this.accent,
+    required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 74,
-      decoration: BoxDecoration(
-        color: const Color(0xFF1B2430),
-        border: Border.all(color: const Color(0xFF0F172A)),
-        borderRadius: BorderRadius.circular(2),
-      ),
-      child: Row(
-        children: [
-          Container(width: 4, color: accent),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 1.6,
-                    color: Color(0xFFE5E7EB),
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 74,
+        decoration: BoxDecoration(
+          color: const Color(0xFF1B2430),
+          border: Border.all(color: const Color(0xFF0F172A)),
+          borderRadius: BorderRadius.circular(2),
+        ),
+        child: Row(
+          children: [
+            Container(width: 4, color: accent),
+            const SizedBox(width: 14),
+
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 1.6,
+                      color: Color(0xFFE5E7EB),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  streak,
-                  style: const TextStyle(
-                    fontSize: 10,
-                    letterSpacing: 1.4,
-                    color: Color(0xFF9CA3AF),
+                  const SizedBox(height: 6),
+                  Text(
+                    streak,
+                    style: const TextStyle(
+                      fontSize: 10,
+                      letterSpacing: 1.4,
+                      color: Color(0xFF9CA3AF),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          Container(
-            width: 18,
-            height: 18,
-            margin: const EdgeInsets.only(right: 16),
-            decoration: BoxDecoration(
-              border: Border.all(color: accent, width: 1.5),
-              color: active ? const Color(0xFF6CFAFF) : Colors.transparent,
+
+            Container(
+              width: 18,
+              height: 18,
+              margin: const EdgeInsets.only(right: 16),
+              decoration: BoxDecoration(
+                border: Border.all(color: accent, width: 1.5),
+                color: active ? const Color(0xFF6CFAFF) : Colors.transparent,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

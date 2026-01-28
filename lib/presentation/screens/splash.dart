@@ -23,21 +23,39 @@ class SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color.fromARGB(255, 0, 0, 0),
+      backgroundColor: const Color(0xFF0B0F14),
 
       body: SafeArea(
         child: Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              //Image.asset('assets/logo.png', width: 120),
-              const SizedBox(height: 16),
+              Image.asset('assets/imgs/habit_control_logo.png', width: 300),
+              const SizedBox(height: 50),
               const Text(
-                'HABIT CONTROL',
+                'HABIT',
                 style: TextStyle(
-                  fontSize: 26,
+                  fontSize: 40,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFFEEB750),
+                  color: Color(0xFFE5E7EB),
+                ),
+              ),
+              const Text(
+                'CONTROL',
+                style: TextStyle(
+                  fontSize: 40,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFFE5E7EB),
+                ),
+              ),
+              const SizedBox(height: 150),
+              const Text(
+                'v1.0.0 [MVP_BUILD]',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 10,
+                  letterSpacing: 1.2,
+                  color: Color(0xFF6B7280),
                 ),
               ),
             ],
