@@ -1,77 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:habit_control/presentation/screens/analytics.dart';
-import 'package:habit_control/presentation/screens/credits.dart';
-import 'package:habit_control/presentation/screens/dashboard.dart';
-import 'package:habit_control/presentation/screens/input_log.dart';
-import 'package:habit_control/presentation/screens/splash.dart';
-// Import único de todas las pantallas
+import 'package:habit_control/presentation/router/app_routes.dart';
+import 'package:habit_control/presentation/theme/app_theme.dart';
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key}); // Clase raíz de la aplicación
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      debugShowCheckedModeBanner: false, // Oculta la etiqueta "Debug"
+      debugShowCheckedModeBanner: false,
       title: 'Habit Control',
-
-      // Tema general de la app
-      theme: ThemeData(
-        brightness: Brightness.dark,
-
-        primaryColor: const Color(0xFF6CFAFF),
-        scaffoldBackgroundColor: const Color(0xFF0B0F14),
-
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Color(0xFF0B0F14),
-          foregroundColor: Color(0xFFE5E7EB),
-          elevation: 0,
-          centerTitle: true,
-        ),
-
-        textTheme: const TextTheme(
-          headlineLarge: TextStyle(
-            fontSize: 32,
-            fontWeight: FontWeight.bold,
-            color: Color(0xFFE5E7EB),
-          ),
-          titleMedium: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: Color(0xFF6CFAFF),
-          ),
-          bodyMedium: TextStyle(fontSize: 14, color: Color(0xFF9CA3AF)),
-        ),
-
-        inputDecorationTheme: const InputDecorationTheme(
-          filled: true,
-          fillColor: Color(0xFF141A22),
-          border: OutlineInputBorder(),
-          focusedBorder: OutlineInputBorder(
-            borderSide: BorderSide(color: Color(0xFF6CFAFF)),
-          ),
-          labelStyle: TextStyle(color: Color(0xFF6CFAFF)),
-        ),
-
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF6CFAFF),
-            foregroundColor: const Color(0xFF0B0F14),
-            textStyle: const TextStyle(fontWeight: FontWeight.bold),
-          ),
-        ),
-      ),
-
-      initialRoute: '/splash', // Pantalla inicial con rutas nombradas
-      // Rutas disponibles en la app
-      routes: {
-        '/home': (context) => const HomeScreen(),
-        '/splash': (context) => const SplashScreen(),
-        '/credits': (context) => const CreditsScreen(),
-        '/dashboard': (context) => const DashboardScreen(),
-        '/data_logging': (context) => const InputLogScreen(),
-        '/analytics': (context) => const AnalyticsScreen(),
-      },
+      theme: AppTheme.dark, // Usa el tema aquí
+      initialRoute: AppRoutes.splash,
+      routes: AppRoutes.map,
     );
   }
 }
@@ -83,7 +24,7 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0B0F14),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -93,18 +34,20 @@ class HomeScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Center(child: Image.asset('assets/imgs/habit_control_logo.png', width: 130, height: 130)),
+                  Center(
+                    child: Image.asset(
+                      'assets/imgs/habit_control_logo.png',
+                      width: 130,
+                      height: 130,
+                    ),
+                  ),
                   const SizedBox(height: 18),
 
-                  const Text(
+                  Text(
                     'HABIT\nCONTROL',
                     textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 36,
-                      fontWeight: FontWeight.w800,
-                      height: 1.05,
-                      letterSpacing: 2.0,
-                      color: Color(0xFFE5E7EB),
+                    style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                      color: Theme.of(context).textTheme.headlineLarge?.color,
                     ),
                   ),
 
@@ -142,8 +85,10 @@ class HomeScreen extends StatelessWidget {
                         Navigator.pushReplacementNamed(context, '/dashboard');
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF6CFAFF),
-                        foregroundColor: const Color(0xFF0B0F14),
+                        backgroundColor: Theme.of(context).primaryColor,
+                        foregroundColor: Theme.of(
+                          context,
+                        ).scaffoldBackgroundColor,
                         elevation: 0,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(4),
@@ -222,14 +167,17 @@ class _TextFieldBox extends StatelessWidget {
           letterSpacing: 1.0,
         ),
         filled: true,
-        fillColor: const Color(0xFF1B2430),
+        fillColor: Theme.of(context).inputDecorationTheme.fillColor,
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,
           vertical: 18,
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(4),
-          borderSide: const BorderSide(color: Color(0xFF334155), width: 1),
+          borderSide: BorderSide(
+            color: Theme.of(context).dividerColor,
+            width: 1,
+          ),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(4),
