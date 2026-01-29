@@ -47,10 +47,7 @@ class AnalyticsScreen extends StatelessWidget {
               const SizedBox(height: 30),
 
               // GRÁFICA
-              const SizedBox(
-                height: 320,
-                child: _WeeklyBarChart(),
-              ),
+              const SizedBox(height: 320, child: _WeeklyBarChart()),
 
               const SizedBox(height: 20),
 
@@ -124,14 +121,12 @@ class _WeeklyBarChart extends StatelessWidget {
         maxY: 1,
         alignment: BarChartAlignment.spaceAround,
         backgroundColor: Colors.transparent,
-        
+
         gridData: FlGridData(
           show: true,
           drawVerticalLine: false,
-          getDrawingHorizontalLine: (value) => const FlLine(
-            color: Color(0xFF1F2937),
-            strokeWidth: 1,
-          ),
+          getDrawingHorizontalLine: (value) =>
+              const FlLine(color: Color(0xFF1F2937), strokeWidth: 1),
         ),
 
         borderData: FlBorderData(
@@ -141,8 +136,10 @@ class _WeeklyBarChart extends StatelessWidget {
 
         titlesData: FlTitlesData(
           show: true,
-          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          
+          topTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+
           // EJE IZQUIERDO (Porcentajes)
           leftTitles: AxisTitles(
             sideTitles: SideTitles(
@@ -175,14 +172,18 @@ class _WeeklyBarChart extends StatelessWidget {
             sideTitles: SideTitles(
               showTitles: true,
               reservedSize: 40, // 40px a la derecha -> SIMETRÍA PERFECTA
-              interval: 0.5,    // Solo queremos marcas principales
+              interval: 0.5, // Solo queremos marcas principales
               getTitlesWidget: (value, meta) {
                 String text = '';
                 // Definimos las etiquetas
-                if (value == 1) text = 'MÁX';
-                else if (value == 0.5) text = 'MED';
-                else if (value == 0) text = 'MIN';
-                
+                if (value == 1) {
+                  text = 'MÁX';
+                } else if (value == 0.5) {
+                  text = 'MED';
+                } else if (value == 0) {
+                  text = 'MIN';
+                }
+
                 if (text.isEmpty) return const SizedBox();
 
                 return SideTitleWidget(
@@ -207,17 +208,17 @@ class _WeeklyBarChart extends StatelessWidget {
           bottomTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,
-              reservedSize: 42, 
+              reservedSize: 42,
               getTitlesWidget: (value, meta) {
                 final index = value.toInt();
                 if (index < 0 || index >= days.length) return const SizedBox();
-                
+
                 return Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     const SizedBox(height: 8),
                     Container(
-                      width: 6, 
+                      width: 6,
                       height: 6,
                       decoration: const BoxDecoration(
                         color: Color(0xFF6CFAFF),
@@ -243,7 +244,7 @@ class _WeeklyBarChart extends StatelessWidget {
         barGroups: weeklyData.asMap().entries.map((entry) {
           final index = entry.key;
           final value = entry.value;
-          
+
           return BarChartGroupData(
             x: index,
             barRods: [
@@ -269,7 +270,7 @@ class _WeeklyBarChart extends StatelessWidget {
 class _StatCard extends StatelessWidget {
   final String title;
   final String value;
-  final bool? isGood; 
+  final bool? isGood;
 
   const _StatCard({
     required this.title,
@@ -322,7 +323,7 @@ class _StatCard extends StatelessWidget {
                   size: 24,
                   color: Color(0xFF22C55E),
                 ),
-              ]
+              ],
             ],
           ),
         ],

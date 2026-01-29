@@ -79,7 +79,7 @@ class CreditsScreen extends StatelessWidget {
               const Text(
                 'TECNOLOGÍAS',
                 style: TextStyle(
-                  fontSize: 14,
+                  fontSize: 18,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 2,
                   color: Color(0xFFE5E7EB),
@@ -88,37 +88,23 @@ class CreditsScreen extends StatelessWidget {
 
               const SizedBox(height: 20),
 
-              const _TechItem(text: 'FLUTTER FRAMEWORK'),
-              const SizedBox(height: 12),
-              const _TechItem(text: 'FIREBASE BACKEND'),
-              const SizedBox(height: 12),
-              const _TechItem(text: 'FL_CHART LIBRARY'),
+              const _TechItem(text: 'FLUTTER (framework)'),
+              const SizedBox(height: 15),
+              const _TechItem(text: 'FIREBASE (auth & firestore)'),
+              const SizedBox(height: 15),
+              const _TechItem(text: 'PROVIDER (gestión de estado · MVVM)'),
 
-              const Spacer(),
-
-              SizedBox(
-                width: double.infinity,
-                height: 52,
-                child: ElevatedButton(
-                  onPressed: () => Navigator.pop(context),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF6CFAFF),
-                    foregroundColor: const Color(0xFF0B0F14),
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                  ),
-                  child: const Text(
-                    'VOLVER',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 1.4,
-                      fontSize: 12,
-                    ),
-                  ),
-                ),
+              const SizedBox(height: 15),
+              const _TechItem(text: 'GO ROUTER (navegación)'),
+              const SizedBox(height: 15),
+              const _TechItem(text: 'FL CHART (gráficas)'),
+              const SizedBox(height: 15),
+              const _TechItem(
+                text: 'PERCENT INDICATOR (indicadores de progreso)',
               ),
+
+              const SizedBox(height: 15),
+              const _TechItem(text: 'GOOGLE FONTS (tipografía)'),
             ],
           ),
         ),
