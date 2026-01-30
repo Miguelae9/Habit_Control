@@ -10,7 +10,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Habit Control',
-      theme: AppTheme.dark, // Usa el tema aquí
+      theme: AppTheme.dark(), // Usa el tema aquí
       initialRoute: AppRoutes.splash,
       routes: AppRoutes.map,
     );
