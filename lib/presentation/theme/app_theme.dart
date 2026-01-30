@@ -1,4 +1,3 @@
-// lib/presentation/theme/app_theme.dart
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -17,7 +16,6 @@ class AppTheme {
       brightness: Brightness.dark,
       primaryColor: _primary,
       scaffoldBackgroundColor: _bg, // Fondo de la app
-
       // Barra de navegación (AppBar)
       appBarTheme: const AppBarTheme(
         backgroundColor: _bg,
@@ -38,9 +36,12 @@ class AppTheme {
           fontWeight: FontWeight.w600,
           color: _primary,
         ),
-        bodyMedium: GoogleFonts.robotoMono(
-          fontSize: 14,
+        bodyMedium: GoogleFonts.robotoMono(fontSize: 14, color: _muted),
+        // Añadir un estilo para los elementos tecnológicos
+        bodySmall: GoogleFonts.roboto(
+          fontSize: 12,
           color: _muted,
+          letterSpacing: 1.6,
         ),
       ),
 
