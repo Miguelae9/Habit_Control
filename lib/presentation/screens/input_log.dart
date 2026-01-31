@@ -12,8 +12,8 @@ class InputLogScreen extends StatefulWidget {
 class _InputLogScreenState extends State<InputLogScreen> {
   // VARIABLES DE ESTADO (Los datos que cambian)
   double horasSueno = 7.5; // 7.5 = 7 horas y media
-  int energia = 85;        // Porcentaje
-  double horasRRSS = 4.5;  // Horas
+  int energia = 85; // Porcentaje
+  double horasRRSS = 4.5; // Horas
   double litrosAgua = 1.5; // NUEVA MÉTRICA
 
   // FUNCIONES DE AYUDA
@@ -48,7 +48,10 @@ class _InputLogScreenState extends State<InputLogScreen> {
                     Builder(
                       builder: (context) {
                         return IconButton(
-                          icon: const Icon(Icons.menu, color: Color(0xFFE5E7EB)),
+                          icon: const Icon(
+                            Icons.menu,
+                            color: Color(0xFFE5E7EB),
+                          ),
                           onPressed: () {
                             Scaffold.of(context).openDrawer();
                           },
@@ -64,7 +67,7 @@ class _InputLogScreenState extends State<InputLogScreen> {
 
                 // TÍTULOS
                 const Text(
-                  'MÉTRICAS DIARIAS',
+                  'DAILY METRICS',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 26,
@@ -75,7 +78,7 @@ class _InputLogScreenState extends State<InputLogScreen> {
                 ),
                 const SizedBox(height: 10),
                 const Text(
-                  'INTRODUCE DATOS PARA CÁLCULO',
+                  'ENTER DATA FOR CALCULATION',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 11,
@@ -88,7 +91,7 @@ class _InputLogScreenState extends State<InputLogScreen> {
 
                 // --- FILA 1: SUEÑO ---
                 _MetricRow(
-                  label: '> HORAS DE SUEÑO',
+                  label: '> SLEEP HOURS',
                   value: formatearHoras(horasSueno),
                   onMinus: () {
                     setState(() {
@@ -105,7 +108,7 @@ class _InputLogScreenState extends State<InputLogScreen> {
 
                 // --- FILA 2: ENERGÍA ---
                 _MetricRow(
-                  label: '> NIVEL DE ENERGÍA',
+                  label: '> ENERGY LEVEL',
                   value: '$energia%',
                   onMinus: () {
                     setState(() {
@@ -122,7 +125,7 @@ class _InputLogScreenState extends State<InputLogScreen> {
 
                 // --- FILA 3: REDES SOCIALES ---
                 _MetricRow(
-                  label: '> TIEMPO DE RRSS',
+                  label: '> SOCIAL MEDIA TIME',
                   value: formatearHoras(horasRRSS),
                   onMinus: () {
                     setState(() {
@@ -140,7 +143,7 @@ class _InputLogScreenState extends State<InputLogScreen> {
 
                 // --- FILA 4: AGUA (NUEVA) ---
                 _MetricRow(
-                  label: '> LITROS DE AGUA',
+                  label: '> WATER (LITERS)',
                   value: '${litrosAgua}L', // Muestra "1.5L"
                   onMinus: () {
                     setState(() {
@@ -155,7 +158,6 @@ class _InputLogScreenState extends State<InputLogScreen> {
                 ),
 
                 const SizedBox(height: 40), // Espacio extra antes del botón
-
                 // BOTÓN GUARDAR
                 SizedBox(
                   height: 52,
@@ -165,8 +167,11 @@ class _InputLogScreenState extends State<InputLogScreen> {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
                           content: Text(
-                            'REGISTRO GUARDADO CORRECTAMENTE',
-                            style: TextStyle(color: Color(0xFF0B0F14), fontWeight: FontWeight.bold),
+                            'RECORD SAVED SUCCESSFULLY',
+                            style: TextStyle(
+                              color: Color(0xFF0B0F14),
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                           backgroundColor: Color(0xFF6CFAFF),
                           duration: Duration(seconds: 2),
@@ -182,7 +187,7 @@ class _InputLogScreenState extends State<InputLogScreen> {
                       ),
                     ),
                     child: const Text(
-                      'GUARDAR REGISTRO',
+                      'SAVE RECORD',
                       style: TextStyle(
                         fontWeight: FontWeight.w700,
                         letterSpacing: 1.4,
@@ -244,7 +249,7 @@ class _MetricRow extends StatelessWidget {
   final String label;
   final String value;
   final VoidCallback onMinus; // Función al pulsar menos
-  final VoidCallback onPlus;  // Función al pulsar más
+  final VoidCallback onPlus; // Función al pulsar más
 
   const _MetricRow({
     required this.label,

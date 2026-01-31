@@ -50,7 +50,7 @@ class SplashScreenState extends State<SplashScreen> {
               ),
               const SizedBox(height: 150),
               const Text(
-                'v1.0.0 [MVP_BUILD]',
+                'v0.1.0 [MVP_BUILD]',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 10,

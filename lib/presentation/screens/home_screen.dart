@@ -73,7 +73,7 @@ class HomeScreen extends StatelessWidget {
 
                 // Usando el estilo directamente desde el Theme
                 const Text(
-                  '> IDENTIFICADOR',
+                  '> IDENTIFIER',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 12,
@@ -117,7 +117,7 @@ class HomeScreen extends StatelessWidget {
                 const SizedBox(height: 18),
 
                 const Text(
-                  '> CLAVE DE ACCESO',
+                  '> ACCESS KEY',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 12,
@@ -134,7 +134,7 @@ class HomeScreen extends StatelessWidget {
                     color: const Color(0xFFE5E7EB),
                   ),
                   decoration: InputDecoration(
-                    hintText: '••••••••',
+                    hintText: '•••••••',
                     hintStyle: Theme.of(context).inputDecorationTheme.hintStyle,
                     fillColor: Theme.of(context).inputDecorationTheme.fillColor,
                     contentPadding: const EdgeInsets.symmetric(
@@ -181,7 +181,7 @@ class HomeScreen extends StatelessWidget {
                       ),
                     ),
                     child: const Text(
-                      'ESTABLECER CONEXIÓN',
+                      'CONNECT',
                       style: TextStyle(
                         fontWeight: FontWeight.w700,
                         letterSpacing: 1.4,

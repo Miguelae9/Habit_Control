@@ -42,7 +42,7 @@ class CreditsScreen extends StatelessWidget {
 
               // Título
               Text(
-                'ARQUITECTURA DEL\nSISTEMA',
+                'SYSTEM\nARCHITECTURE',
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.headlineLarge,
               ),
@@ -72,7 +72,7 @@ class CreditsScreen extends StatelessWidget {
 
               // Subtítulo de tecnologías
               Text(
-                'TECNOLOGÍAS',
+                'TECHNOLOGIES',
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
@@ -96,31 +96,31 @@ class CreditsScreen extends StatelessWidget {
               ),
               const SizedBox(height: 15),
               Text(
-                'PROVIDER (gestión de estado · MVVM)',
+                'PROVIDER (state management · MVVM)',
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodySmall,
               ),
               const SizedBox(height: 15),
               Text(
-                'GO ROUTER (navegación)',
+                'GO ROUTER (navigation)',
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodySmall,
               ),
               const SizedBox(height: 15),
               Text(
-                'FL CHART (gráficas)',
+                'FL CHART (charts)',
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodySmall,
               ),
               const SizedBox(height: 15),
               Text(
-                'PERCENT INDICATOR (indicadores de progreso)',
+                'PERCENT INDICATOR (progress indicators)',
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodySmall,
               ),
               const SizedBox(height: 15),
               Text(
-                'GOOGLE FONTS (tipografía)',
+                'GOOGLE FONTS (typography)',
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodySmall,
               ),

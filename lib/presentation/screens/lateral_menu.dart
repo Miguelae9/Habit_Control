@@ -119,13 +119,13 @@ class LateralMenu extends StatelessWidget {
 
             // ITEMS
             item(label: 'DASHBOARD', routeName: AppRoutes.dashboard),
-            item(label: 'REGISTRO DE DATOS', routeName: AppRoutes.dataLogging),
-            item(label: 'ANALÍTICAS', routeName: AppRoutes.analytics),
-            item(label: 'ACERCA DE', routeName: AppRoutes.credits),
+            item(label: 'DATA LOGGING', routeName: AppRoutes.dataLogging),
+            item(label: 'ANALYTICS', routeName: AppRoutes.analytics),
+            item(label: 'ABOUT', routeName: AppRoutes.credits),
 
             const Spacer(),
 
-            item(label: 'CERRAR SESIÓN', routeName: AppRoutes.home),
+            item(label: 'LOG OUT', routeName: AppRoutes.home),
           ],
         ),
       ),

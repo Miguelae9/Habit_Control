@@ -34,7 +34,7 @@ class AnalyticsScreen extends StatelessWidget {
                   ),
                   const Spacer(),
                   const Text(
-                    'RENDIMIENTO SEMANAL',
+                    'WEEKLY PERFORMANCE',
                     style: TextStyle(
                       fontSize: 11,
                       letterSpacing: 1.8,
@@ -56,7 +56,7 @@ class AnalyticsScreen extends StatelessWidget {
                 children: [
                   Expanded(
                     child: _StatCard(
-                      title: 'CONSISTENCIA',
+                      title: 'CONSISTENCY',
                       value: '85%',
                       isGood: true,
                     ),
@@ -64,8 +64,8 @@ class AnalyticsScreen extends StatelessWidget {
                   SizedBox(width: 10),
                   Expanded(
                     child: _StatCard(
-                      title: 'RACHA ACTUAL',
-                      value: '12 DÍAS',
+                      title: 'CURRENT STREAK',
+                      value: '12 DAYS',
                       isGood: null,
                     ),
                   ),
@@ -76,7 +76,7 @@ class AnalyticsScreen extends StatelessWidget {
 
               // QUOTE
               const Text(
-                '“LA EXCELENCIA ES\nUN HÁBITO,\nNO UN ACTO”',
+                '“EXCELLENCE IS\nA HABIT,\nNOT AN ACT”',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 26,
@@ -88,7 +88,7 @@ class AnalyticsScreen extends StatelessWidget {
               ),
               const SizedBox(height: 18),
               const Text(
-                'ARISTÓTELES',
+                'ARISTOTLE',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 12,
@@ -113,7 +113,7 @@ class _WeeklyBarChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final List<double> weeklyData = [0.80, 0.50, 0.32, 0.60, 0.53, 0.73, 0.45];
-    final List<String> days = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
+    final List<String> days = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
     return BarChart(
       BarChartData(
@@ -144,10 +144,9 @@ class _WeeklyBarChart extends StatelessWidget {
           leftTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,
-              reservedSize: 40, // 40px a la izquierda
+              reservedSize: 40,
               interval: 0.25,
               getTitlesWidget: (value, meta) {
-                // Solo mostramos 0, 50 y 100 para más limpieza
                 if (value == 0 || value == 0.5 || value == 1) {
                   return SideTitleWidget(
                     axisSide: meta.axisSide,
@@ -171,15 +170,14 @@ class _WeeklyBarChart extends StatelessWidget {
           rightTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,
-              reservedSize: 40, // 40px a la derecha -> SIMETRÍA PERFECTA
-              interval: 0.5, // Solo queremos marcas principales
+              reservedSize: 40,
+              interval: 0.5,
               getTitlesWidget: (value, meta) {
                 String text = '';
-                // Definimos las etiquetas
                 if (value == 1) {
-                  text = 'MÁX';
+                  text = 'MAX';
                 } else if (value == 0.5) {
-                  text = 'MED';
+                  text = 'MID';
                 } else if (value == 0) {
                   text = 'MIN';
                 }
@@ -192,9 +190,8 @@ class _WeeklyBarChart extends StatelessWidget {
                   child: Text(
                     text,
                     style: TextStyle(
-                      // Un poco más oscuro que la izquierda para que sea sutil
                       color: const Color(0xFF6B7280).withOpacity(0.7),
-                      fontSize: 9, // Un pelín más pequeño (tipo técnico)
+                      fontSize: 9,
                       letterSpacing: 1.5,
                       fontWeight: FontWeight.bold,
                     ),
@@ -290,30 +287,40 @@ class _StatCard extends StatelessWidget {
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Text(
-            title,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 1.2,
-              color: Color(0xFFE5E7EB),
+          // IMPORTANTE: 1 sola línea para que no haga overflow vertical
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              title,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 1.2,
+                color: Color(0xFFE5E7EB),
+              ),
             ),
           ),
-          const SizedBox(height: 8),
+
+          const SizedBox(height: 4), // antes 8
+
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                value,
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 1.0,
-                  color: Color(0xFFF3F4F6),
+              Flexible(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    value,
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 1.0,
+                      color: Color(0xFFF3F4F6),
+                    ),
+                  ),
                 ),
               ),
               if (isGood != null) ...[

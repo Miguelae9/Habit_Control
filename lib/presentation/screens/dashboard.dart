@@ -12,12 +12,12 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   // Lista de hábitos
   final List<Habit> habits = [
-    Habit('GIMNASIO', 'RACHA: 4 DÍAS', true),
-    Habit('LECTURA', 'RACHA: 15 DÍAS', true),
-    Habit('MEDITACIÓN', 'RACHA: 2 DÍAS', false),
-    Habit('DORMIR 8\nHORAS', 'RACHA: 5 DÍAS', false),
-    Habit('AGUA', 'RACHA: 3 DÍAS', true),
-    Habit('CORRER', 'RACHA: 1 DÍA', false),
+    Habit('GYM', 'STREAK: 4 DAYS', true),
+    Habit('READING', 'STREAK: 15 DAYS', true),
+    Habit('MEDITATION', 'STREAK: 2 DAYS', false),
+    Habit('SLEEP 8\nHOURS', 'STREAK: 5 DAYS', false),
+    Habit('WATER', 'STREAK: 3 DAYS', true),
+    Habit('RUNNING', 'STREAK: 1 DAY', false),
   ];
 
   // Función para marcar/desmarcar
@@ -84,7 +84,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         true, // Esto evita que empiece de 0 cada vez
                     animationDuration:
                         600, // Un poco más rápido para que se sienta ágil
-
                     // ---------------------------
                     circularStrokeCap: CircularStrokeCap.round,
                     backgroundColor: const Color(0xFF1E293B),
@@ -102,7 +101,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         ),
                         const SizedBox(height: 4),
                         const Text(
-                          'COMPLETADO',
+                          'COMPLETED',
                           style: TextStyle(
                             fontSize: 11,
                             letterSpacing: 2.0,
@@ -118,9 +117,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
                 // WEATHER
                 const WeatherCard(
-                  city: 'MÁLAGA, ES',
+                  city: 'MALAGA, ES',
                   temp: '18°C',
-                  status: 'ÓPTIMO',
+                  status: 'OPTIMAL',
                   hum: '45%',
                   wind: '12km/h',
                 ),
