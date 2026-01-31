@@ -37,10 +37,13 @@ class HomeScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Center(
-                  child: Image.asset(
-                    'assets/imgs/habit_control_logo.png',
-                    width: 130,
-                    height: 130,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: Image.asset(
+                      'assets/imgs/habit_control_logo.png',
+                      width: 130,
+                      height: 130,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 18),
@@ -155,7 +158,7 @@ class HomeScreen extends StatelessWidget {
                   ),
                 ),
 
-                const SizedBox(height: 22),
+                const SizedBox(height: 40),
 
                 // Botón de conexión
                 SizedBox(
@@ -164,7 +167,7 @@ class HomeScreen extends StatelessWidget {
                     onPressed: () {
                       Navigator.pushReplacementNamed(
                         context,
-                        '/dashboard',
+                        AppRoutes.dashboard,
                       ); // Navegar a la pantalla de dashboard
                     },
                     style: ElevatedButton.styleFrom(

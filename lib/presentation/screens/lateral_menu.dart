@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:habit_control/presentation/router/app_routes.dart';
 
 class LateralMenu extends StatelessWidget {
   const LateralMenu({super.key});
@@ -117,14 +118,14 @@ class LateralMenu extends StatelessWidget {
             Container(height: 1, color: _border),
 
             // ITEMS
-            item(label: 'DASHBOARD', routeName: '/dashboard'),
-            item(label: 'REGISTRO DE DATOS', routeName: '/data_logging'),
-            item(label: 'ANALÍTICAS', routeName: '/analytics'),
-            item(label: 'ACERCA DE', routeName: '/credits'),
+            item(label: 'DASHBOARD', routeName: AppRoutes.dashboard),
+            item(label: 'REGISTRO DE DATOS', routeName: AppRoutes.dataLogging),
+            item(label: 'ANALÍTICAS', routeName: AppRoutes.analytics),
+            item(label: 'ACERCA DE', routeName: AppRoutes.credits),
 
             const Spacer(),
 
-            item(label: 'CERRAR SESIÓN', routeName: '/home'),
+            item(label: 'CERRAR SESIÓN', routeName: AppRoutes.home),
           ],
         ),
       ),

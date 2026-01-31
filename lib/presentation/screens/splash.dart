@@ -30,18 +30,18 @@ class SplashScreenState extends State<SplashScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Image.asset('assets/imgs/habit_control_logo.png', width: 300),
-              const SizedBox(height: 50),
-              const Text(
-                'HABIT',
-                style: TextStyle(
-                  fontSize: 40,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFFE5E7EB),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: Image.asset(
+                  'assets/imgs/habit_control_logo.png',
+                  width: 300,
                 ),
               ),
+
+              const SizedBox(height: 50),
               const Text(
-                'CONTROL',
+                'HABIT\nCONTROL',
+                textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 40,
                   fontWeight: FontWeight.bold,
