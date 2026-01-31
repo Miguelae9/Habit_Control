@@ -3,41 +3,60 @@ import 'package:flutter/material.dart';
 class LateralMenu extends StatelessWidget {
   const LateralMenu({super.key});
 
+  // Colores propios del drawer (no vienen del Theme).
+  static const Color _card = Color(0xFF141A22);
+  static const Color _border = Color(0xFF1F2A37);
+
   @override
   Widget build(BuildContext context) {
-    const bg = Color(0xFF0B0F14);
-    const card = Color(0xFF141A22);
-    const border = Color(0xFF1F2A37);
-    const accent = Color(0xFF6CFAFF);
-    const textMain = Color(0xFFE5E7EB);
-    const textMuted = Color(0xFF9CA3AF);
+    // Theme de la app (AppTheme.dark()).
+    final theme = Theme.of(context);
 
+    // Colores del Theme.
+    final bg = theme.scaffoldBackgroundColor;
+    final accent = theme.primaryColor;
+
+    // Color de texto (si el theme no lo trae, uso un fallback).
+    final textMain =
+        theme.textTheme.headlineLarge?.color ?? const Color(0xFFF8FAFC);
+    final textMuted =
+        theme.textTheme.bodyMedium?.color ?? const Color(0xFF94A3B8);
+
+    // Ruta actual (ej: '/dashboard'). Sirve para marcar el item seleccionado.
+    // Puede ser null si la pantalla no tiene "name".
     final currentRoute = ModalRoute.of(context)?.settings.name;
 
-    Widget item({
-      required String label,
-      required VoidCallback onTap,
-      bool selected = false,
-    }) {
+    // Crea un botón del menú (reutilizable).
+    Widget item({required String label, required String routeName}) {
+      final selected = currentRoute == routeName;
+      final color = selected ? accent : textMuted;
+
       return Container(
         height: 48,
         decoration: const BoxDecoration(
-          color: card,
+          color: _card,
           border: Border(
-            top: BorderSide(color: border),
-            bottom: BorderSide(color: border),
+            top: BorderSide(color: _border),
+            bottom: BorderSide(color: _border),
           ),
         ),
         child: InkWell(
-          onTap: onTap,
+          onTap: () {
+            Navigator.of(context).pop(); // Cierra el drawer
+            Navigator.pushReplacementNamed(
+              context,
+              routeName,
+            ); // Cambia pantalla
+          },
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 14),
             child: Row(
               children: [
+                // '>' separado del texto para controlar spacing/alineación.
                 Text(
                   '>',
                   style: TextStyle(
-                    color: selected ? accent : textMuted,
+                    color: color,
                     fontSize: 12,
                     letterSpacing: 1.2,
                     fontWeight: FontWeight.w700,
@@ -47,7 +66,7 @@ class LateralMenu extends StatelessWidget {
                 Text(
                   label,
                   style: TextStyle(
-                    color: selected ? accent : textMuted,
+                    color: color,
                     fontSize: 12,
                     letterSpacing: 1.6,
                     fontWeight: FontWeight.w700,
@@ -70,18 +89,16 @@ class LateralMenu extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(18, 18, 18, 12),
               child: Column(
                 children: [
-                  Center(
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(16),
-                      child: Image.asset(
-                        'assets/imgs/habit_control_logo.png',
-                        width: 150,
-                        height: 150,
-                      ),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: Image.asset(
+                      'assets/imgs/habit_control_logo.png',
+                      width: 150,
+                      height: 150,
                     ),
                   ),
                   const SizedBox(height: 25),
-                  const Text(
+                  Text(
                     'HABIT\nCONTROL',
                     textAlign: TextAlign.center,
                     style: TextStyle(
@@ -97,53 +114,17 @@ class LateralMenu extends StatelessWidget {
             ),
 
             const SizedBox(height: 20),
-            // Separador fino
-            Container(height: 1, color: border),
+            Container(height: 1, color: _border),
 
-            // ITEMS (selected dinámico según ruta)
-            item(
-              label: 'DASHBOARD',
-              selected: currentRoute == '/dashboard',
-              onTap: () {
-                Navigator.of(context).pop();
-                Navigator.pushReplacementNamed(context, '/dashboard');
-              },
-            ),
-            item(
-              label: 'REGISTRO DE DATOS',
-              selected: currentRoute == '/data_logging',
-              onTap: () {
-                Navigator.of(context).pop();
-                Navigator.pushReplacementNamed(context, '/data_logging');
-              },
-            ),
-            item(
-              label: 'ANALÍTICAS',
-              selected: currentRoute == '/analytics',
-              onTap: () {
-                Navigator.of(context).pop();
-                Navigator.pushReplacementNamed(context, '/analytics');
-              },
-            ),
-            item(
-              label: 'ACERCA DE',
-              selected: currentRoute == '/credits',
-              onTap: () {
-                Navigator.of(context).pop();
-                Navigator.pushReplacementNamed(context, '/credits');
-              },
-            ),
+            // ITEMS
+            item(label: 'DASHBOARD', routeName: '/dashboard'),
+            item(label: 'REGISTRO DE DATOS', routeName: '/data_logging'),
+            item(label: 'ANALÍTICAS', routeName: '/analytics'),
+            item(label: 'ACERCA DE', routeName: '/credits'),
 
             const Spacer(),
 
-            item(
-              label: 'CERRAR SESIÓN',
-              selected: currentRoute == '/home',
-              onTap: () {
-                Navigator.of(context).pop();
-                Navigator.pushReplacementNamed(context, '/home');
-              },
-            ),
+            item(label: 'CERRAR SESIÓN', routeName: '/home'),
           ],
         ),
       ),

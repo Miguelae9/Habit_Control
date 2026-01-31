@@ -164,8 +164,8 @@ class HomeScreen extends StatelessWidget {
                     onPressed: () {
                       Navigator.pushReplacementNamed(
                         context,
-                        '/credits',
-                      ); // Navegar a la pantalla de créditos
+                        '/dashboard',
+                      ); // Navegar a la pantalla de dashboard
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Theme.of(context).primaryColor,
