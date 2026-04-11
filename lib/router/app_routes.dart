@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:habit_control/screens/analytics/analytics_screen.dart';
+import 'package:habit_control/screens/auth/register.dart';
 import 'package:habit_control/screens/credits/credits_screen.dart';
 import 'package:habit_control/screens/dashboard/dashboard_screen.dart';
 import 'package:habit_control/screens/input_log/input_log_screen.dart';
@@ -15,6 +16,9 @@ class AppRoutes {
 
   /// Route name for the authentication/home screen.
   static const home = '/home';
+
+  /// Route name for the authentication/register screen.
+  static const register = '/register';
 
   /// Route name for the credits screen.
   static const credits = '/credits';
@@ -32,6 +36,7 @@ class AppRoutes {
   static final Map<String, WidgetBuilder> map = {
     splash: (context) => const SplashScreen(),
     home: (context) => const LoginScreen(),
+    register: (context) => const RegisterScreen(),
     credits: (context) => const CreditsScreen(),
     dashboard: (context) => const DashboardScreen(),
     inputLog: (context) => const InputLogScreen(),

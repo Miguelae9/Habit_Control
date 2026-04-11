@@ -7,40 +7,25 @@ import 'widgets/auth_primary_button.dart';
 import 'widgets/auth_section_label.dart';
 import 'widgets/auth_text_field.dart';
 
-/// Login screen backed by Firebase Auth email/password sign-in.
-///
-/// Visible behavior:
-/// - Converts the entered identifier into an email via [_toEmail]
-/// - Calls [FirebaseAuth.signInWithEmailAndPassword]
-/// - On success, navigates to [AppRoutes.dashboard]
-/// - On [FirebaseAuthException], shows a [SnackBar]
-class LoginScreen extends StatefulWidget {
-  /// Creates the login screen.
-  const LoginScreen({super.key});
+/// Register screen backed by Firebase Auth email/password sign-up.
+class RegisterScreen extends StatefulWidget {
+  const RegisterScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  State<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController _userCtrl = TextEditingController();
   final TextEditingController _passCtrl = TextEditingController();
 
   bool _isLoading = false;
 
-  /// Converts a user-entered identifier into an email address.
-  ///
-  /// Needs clarification from author: The `@profe.local` domain and the special
-  /// `usuario` mapping appear to be environment-specific, but no context is
-  /// provided in this file.
-  String _toEmail(String username) {
-    final u = username.trim();
-    if (u.contains('@')) return u;
-    if (u.toLowerCase() == 'usuario') return 'usuario@profe.local';
-    return '$u@profe.local';
+  String _toEmail(String email) {
+    return email.trim();
   }
 
-  Future<void> _login() async {
+  Future<void> _register() async {
     if (_isLoading) return;
 
     final String user = _userCtrl.text.trim();
@@ -56,18 +41,34 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(_setLoadingTrue);
 
     try {
-      await FirebaseAuth.instance.signInWithEmailAndPassword(
+      await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: _toEmail(user),
         password: pass,
       );
 
       if (!mounted) return;
-      Navigator.pushReplacementNamed(context, AppRoutes.dashboard);
-    } on FirebaseAuthException {
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Registration completed successfully')),
+      );
+
+      Navigator.pushReplacementNamed(context, AppRoutes.home);
+    } on FirebaseAuthException catch (e) {
       if (!mounted) return;
+
+      String message = 'Could not register user. Please try again.';
+
+      if (e.code == 'weak-password') {
+        message = 'The password provided is too weak.';
+      } else if (e.code == 'email-already-in-use') {
+        message = 'This email is already in use.';
+      } else if (e.code == 'invalid-email') {
+        message = 'Email address is not valid.';
+      }
+
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('Invalid credentials')));
+      ).showSnackBar(SnackBar(content: Text(message)));
     } finally {
       if (mounted) {
         setState(_setLoadingFalse);
@@ -100,8 +101,8 @@ class _LoginScreenState extends State<LoginScreen> {
     final Color textMuted =
         theme.textTheme.bodyMedium?.color ?? const Color(0xFF9CA3AF);
 
-    final String buttonText = _isLoading ? 'CONNECTING...' : 'CONNECT';
-    final VoidCallback? onPressed = _isLoading ? null : _login;
+    final String buttonText = _isLoading ? 'CREATING...' : 'CREATE ACCOUNT';
+    final VoidCallback? onPressed = _isLoading ? null : _register;
 
     return Scaffold(
       backgroundColor: bg,
@@ -115,6 +116,7 @@ class _LoginScreenState extends State<LoginScreen> {
               children: <Widget>[
                 const Center(child: AuthLogo()),
                 const SizedBox(height: 18),
+
                 Text(
                   'HABIT\nCONTROL',
                   textAlign: TextAlign.center,
@@ -122,9 +124,11 @@ class _LoginScreenState extends State<LoginScreen> {
                     color: textMain,
                   ),
                 ),
+
                 const SizedBox(height: 10),
+
                 Text(
-                  'SYSTEM\nINITIALIZATION',
+                  'NEW USER\nREGISTRATION',
                   textAlign: TextAlign.center,
                   style: theme.textTheme.bodyMedium?.copyWith(
                     fontSize: 11,
@@ -133,9 +137,10 @@ class _LoginScreenState extends State<LoginScreen> {
                     color: textMuted,
                   ),
                 ),
+
                 const SizedBox(height: 50),
 
-                const AuthSectionLabel(text: '> IDENTIFIER'),
+                const AuthSectionLabel(text: '> NEW IDENTIFIER'),
                 const SizedBox(height: 10),
                 AuthTextField(
                   controller: _userCtrl,
@@ -145,7 +150,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                 const SizedBox(height: 18),
 
-                const AuthSectionLabel(text: '> ACCESS KEY'),
+                const AuthSectionLabel(text: '> NEW ACCESS KEY'),
                 const SizedBox(height: 10),
                 AuthTextField(
                   controller: _passCtrl,
@@ -163,9 +168,12 @@ class _LoginScreenState extends State<LoginScreen> {
                   onPressed: _isLoading
                       ? null
                       : () {
-                          Navigator.pushNamed(context, AppRoutes.register);
+                          Navigator.pushReplacementNamed(
+                            context,
+                            AppRoutes.home,
+                          );
                         },
-                  child: const Text("Don't have an account? Register here"),
+                  child: const Text('Go back to login'),
                 ),
 
                 const SizedBox(height: 20),
