@@ -4,6 +4,7 @@ import 'package:habit_control/screens/auth/register.dart';
 import 'package:habit_control/screens/credits/credits_screen.dart';
 import 'package:habit_control/screens/dashboard/dashboard_screen.dart';
 import 'package:habit_control/screens/input_log/input_log_screen.dart';
+import 'package:habit_control/screens/settings/settings_screen.dart';
 import 'package:habit_control/screens/splash/splash_screen.dart';
 import 'package:habit_control/screens/auth/home_screen.dart';
 
@@ -32,6 +33,9 @@ class AppRoutes {
   /// Route name for the analytics screen.
   static const analytics = '/analytics';
 
+  /// Route name for the settings screen.
+  static const settings = '/settings';
+
   /// Map of route name -> screen builder.
   static final Map<String, WidgetBuilder> map = {
     splash: (context) => const SplashScreen(),
@@ -41,5 +45,6 @@ class AppRoutes {
     dashboard: (context) => const DashboardScreen(),
     inputLog: (context) => const InputLogScreen(),
     analytics: (context) => const AnalyticsScreen(),
+    settings: (context) => const SettingsScreen(),
   };
 }

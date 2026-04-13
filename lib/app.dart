@@ -94,6 +94,7 @@ class _MyAppState extends State<MyApp> {
     if (routeName == AppRoutes.dashboard) return true;
     if (routeName == AppRoutes.inputLog) return true;
     if (routeName == AppRoutes.analytics) return true;
+    if (routeName == AppRoutes.settings) return true;
     return false;
   }
 
