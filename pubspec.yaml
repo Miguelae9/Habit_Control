@@ -46,6 +46,8 @@ dependencies:
   cloud_firestore: ^6.1.2    # Base de datos Nube
   shared_preferences: ^2.2.2  # Base de datos Local
   intl: ^0.19.0               # Formateo de fechas
+  sqflite: ^2.4.2
+  path: ^1.9.1
 
 dev_dependencies:
   flutter_test:

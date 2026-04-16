@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 
-/// Tappable habit row with a colored accent bar and completion indicator.
+enum HabitMenuAction { edit, delete }
+
 class HabitTile extends StatelessWidget {
   final String title;
   final String streak;
   final bool active;
   final Color accent;
   final VoidCallback onTap;
+  final ValueChanged<HabitMenuAction> onMenuSelected;
 
-  /// Creates a habit tile.
   const HabitTile({
     super.key,
     required this.title,
@@ -16,6 +17,7 @@ class HabitTile extends StatelessWidget {
     required this.active,
     required this.accent,
     required this.onTap,
+    required this.onMenuSelected,
   });
 
   @override
@@ -24,6 +26,7 @@ class HabitTile extends StatelessWidget {
       onTap: onTap,
       child: Container(
         height: 74,
+        margin: const EdgeInsets.only(bottom: 10),
         decoration: BoxDecoration(
           color: const Color(0xFF1B2430),
           border: Border.all(color: const Color(0xFF0F172A)),
@@ -67,11 +70,25 @@ class HabitTile extends StatelessWidget {
             Container(
               width: 18,
               height: 18,
-              margin: const EdgeInsets.only(right: 16),
+              margin: const EdgeInsets.only(right: 8),
               decoration: BoxDecoration(
                 border: Border.all(color: accent, width: 1.5),
                 color: active ? const Color(0xFF6CFAFF) : Colors.transparent,
               ),
+            ),
+            PopupMenuButton<HabitMenuAction>(
+              icon: const Icon(Icons.more_vert, color: Color(0xFF9CA3AF)),
+              onSelected: onMenuSelected,
+              itemBuilder: (context) => const [
+                PopupMenuItem(
+                  value: HabitMenuAction.edit,
+                  child: Text('Editar'),
+                ),
+                PopupMenuItem(
+                  value: HabitMenuAction.delete,
+                  child: Text('Eliminar'),
+                ),
+              ],
             ),
           ],
         ),

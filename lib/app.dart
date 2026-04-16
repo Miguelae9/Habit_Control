@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:habit_control/shared/state/habit_catalog_store.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -58,6 +59,9 @@ class _MyAppState extends State<MyApp> {
       providers: [
         ChangeNotifierProvider<HabitDayStore>.value(value: _habitStore),
         ChangeNotifierProvider<DailyMetricsStore>.value(value: _metricsStore),
+        ChangeNotifierProvider<HabitCatalogStore>(
+          create: (_) => HabitCatalogStore()..loadLocal(),
+        ),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,

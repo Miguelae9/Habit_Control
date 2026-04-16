@@ -1,24 +1,17 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:percent_indicator/percent_indicator.dart';
-
-import 'package:habit_control/shared/widgets/lateral_menu/lateral_menu.dart';
+import 'package:provider/provider.dart';
 
 import 'package:habit_control/screens/dashboard/models/habit.dart';
 import 'package:habit_control/screens/dashboard/widgets/habit_tile.dart';
-import 'package:habit_control/shared/widgets/online_badge.dart';
-
-import 'package:provider/provider.dart';
+import 'package:habit_control/shared/state/habit_catalog_store.dart';
 import 'package:habit_control/shared/state/habit_day_store.dart';
 import 'package:habit_control/shared/utils/day_key.dart';
+import 'package:habit_control/shared/widgets/lateral_menu/lateral_menu.dart';
+import 'package:habit_control/shared/widgets/online_badge.dart';
 
-/// Dashboard screen displaying today's habit list and completion progress.
-///
-/// Visible data source:
-/// - Per-day completion sets from [HabitDayStore] keyed by `YYYY-MM-DD`.
-///
-/// Uses `percent_indicator` to render progress based on `done / totalHabits`.
 class DashboardScreen extends StatefulWidget {
-  /// Creates the dashboard screen.
   const DashboardScreen({super.key});
 
   @override
@@ -28,96 +21,179 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
-  final List<Habit> _habits = <Habit>[
-    const Habit(id: 'gym', title: 'GYM', streakText: 'STREAK: 4 DAYS'),
-    const Habit(id: 'reading', title: 'READING', streakText: 'STREAK: 15 DAYS'),
-    const Habit(
-      id: 'meditation',
-      title: 'MEDITATION',
-      streakText: 'STREAK: 2 DAYS',
-    ),
-    const Habit(
-      id: 'sleep_8h',
-      title: 'SLEEP 8\nHOURS',
-      streakText: 'STREAK: 5 DAYS',
-    ),
-    const Habit(id: 'water', title: 'WATER', streakText: 'STREAK: 3 DAYS'),
-    const Habit(id: 'running', title: 'RUNNING', streakText: 'STREAK: 1 DAY'),
-  ];
-
-  void _openDrawer() {
-    final ScaffoldState? state = _scaffoldKey.currentState;
-    if (state != null) {
-      state.openDrawer();
-    }
-  }
-
-  List<Widget> _buildHabitTiles(String todayKey) {
-    final store = context.watch<HabitDayStore>();
-    final doneIds = store.doneForDay(todayKey);
-
-    final List<Widget> tiles = <Widget>[];
-
-    for (int i = 0; i < _habits.length; i++) {
-      final habit = _habits[i];
-      final isActive = doneIds.contains(habit.id);
-
-      tiles.add(
-        HabitTile(
-          title: habit.title,
-          streak: habit.streakText,
-          active: isActive,
-          accent: isActive ? const Color(0xFF6CFAFF) : const Color(0xFF93A3B8),
-          onTap: () {
-            context.read<HabitDayStore>().toggleHabitForDay(
-              dayKey: todayKey,
-              habitId: habit.id,
-            );
-          },
-        ),
-      );
-    }
-
-    return tiles;
-  }
-
-  void _afterFirstFrame(Duration _) {
-    final HabitDayStore store = context.read<HabitDayStore>();
-    final String today = dayKeyFromDate(DateTime.now());
-
-    store.trySyncPending();
-    store.syncDayFromCloud(today);
-  }
-
   @override
   void initState() {
     super.initState();
-
     WidgetsBinding.instance.addPostFrameCallback(_afterFirstFrame);
+  }
+
+  Future<void> _afterFirstFrame(Duration _) async {
+    final dayStore = context.read<HabitDayStore>();
+    final catalogStore = context.read<HabitCatalogStore>();
+    final today = dayKeyFromDate(DateTime.now());
+
+    await catalogStore.trySyncPending();
+    await catalogStore.syncFromCloud();
+
+    await dayStore.trySyncPending();
+    await dayStore.syncDayFromCloud(today);
+  }
+
+  void _openDrawer() {
+    _scaffoldKey.currentState?.openDrawer();
+  }
+
+  Future<void> _showHabitDialog({Habit? habit}) async {
+    final titleCtrl = TextEditingController(text: habit?.title ?? '');
+    final streakCtrl = TextEditingController(text: habit?.streakText ?? '');
+
+    final HabitCatalogStore store = context.read<HabitCatalogStore>();
+
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: Text(habit == null ? 'Crear hábito' : 'Editar hábito'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: titleCtrl,
+                decoration: const InputDecoration(
+                  labelText: 'Nombre',
+                  hintText: 'Ej: Leer',
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: streakCtrl,
+                decoration: const InputDecoration(
+                  labelText: 'Texto secundario',
+                  hintText: 'Ej: STREAK: 0 DAYS',
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('Cancelar'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                final String title = titleCtrl.text.trim();
+                final String streak = streakCtrl.text.trim();
+
+                if (title.isEmpty) return;
+
+                Navigator.of(dialogContext).pop();
+
+                if (habit == null) {
+                  store.addHabit(title: title, streakText: streak);
+                } else {
+                  store.updateHabit(
+                    original: habit,
+                    title: title,
+                    streakText: streak,
+                  );
+                }
+              },
+              child: const Text('Guardar'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _deleteHabit(Habit habit) async {
+    final HabitCatalogStore store = context.read<HabitCatalogStore>();
+
+    final bool? confirm = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Eliminar hábito'),
+          content: Text('¿Seguro que quieres eliminar "${habit.title}"?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('Cancelar'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: const Text('Eliminar'),
+            ),
+          ],
+        );
+      },
+    );
+    if (confirm != true) return;
+    unawaited(store.deleteHabit(habit.id));
+  }
+
+  List<Widget> _buildHabitTiles({
+    required String todayKey,
+    required List<Habit> habits,
+  }) {
+    final doneIds = context.watch<HabitDayStore>().doneForDay(todayKey);
+
+    return habits.map((habit) {
+      final isActive = doneIds.contains(habit.id);
+
+      return HabitTile(
+        title: habit.title,
+        streak: habit.streakText,
+        active: isActive,
+        accent: isActive ? const Color(0xFF6CFAFF) : const Color(0xFF93A3B8),
+        onTap: () {
+          context.read<HabitDayStore>().toggleHabitForDay(
+            dayKey: todayKey,
+            habitId: habit.id,
+          );
+        },
+        onMenuSelected: (action) {
+          switch (action) {
+            case HabitMenuAction.edit:
+              _showHabitDialog(habit: habit);
+              break;
+            case HabitMenuAction.delete:
+              _deleteHabit(habit);
+              break;
+          }
+        },
+      );
+    }).toList();
   }
 
   @override
   Widget build(BuildContext context) {
-    final ThemeData theme = Theme.of(context);
+    final theme = Theme.of(context);
+    final habits = context.watch<HabitCatalogStore>().habits;
+    final todayKey = dayKeyFromDate(DateTime.now());
+    final doneIds = context.watch<HabitDayStore>().doneForDay(todayKey);
 
-    final Color bg = theme.scaffoldBackgroundColor;
-    final Color textMain =
-        theme.textTheme.headlineLarge?.color ?? const Color(0xFFE5E7EB);
-    final Color textMuted =
-        theme.textTheme.bodyMedium?.color ?? const Color(0xFF9CA3AF);
+    final habitIds = habits.map((habit) => habit.id).toSet();
+    final completedToday = doneIds.where(habitIds.contains).length;
 
-    final String todayKey = dayKeyFromDate(DateTime.now());
-    final done = context.watch<HabitDayStore>().doneForDay(todayKey).length;
-    final double progresoDecimal = _habits.isEmpty
+    final double progresoDecimal = habits.isEmpty
         ? 0.0
-        : (done / _habits.length);
+        : (completedToday / habits.length).clamp(0.0, 1.0);
+    final textMain =
+        theme.textTheme.headlineLarge?.color ?? const Color(0xFFE5E7EB);
+    final textMuted =
+        theme.textTheme.bodyMedium?.color ?? const Color(0xFF9CA3AF);
 
     return Scaffold(
       key: _scaffoldKey,
-      backgroundColor: bg,
+      backgroundColor: theme.scaffoldBackgroundColor,
       drawer: const Drawer(
         backgroundColor: Color.fromARGB(34, 0, 70, 221),
         child: LateralMenu(),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => _showHabitDialog(),
+        child: const Icon(Icons.add),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -126,9 +202,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
             constraints: const BoxConstraints(maxWidth: 420),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: <Widget>[
+              children: [
                 Row(
-                  children: <Widget>[
+                  children: [
                     IconButton(
                       icon: Icon(Icons.menu, color: textMain),
                       onPressed: _openDrawer,
@@ -137,28 +213,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     OnlineBadge(textColor: textMain),
                   ],
                 ),
-
                 const SizedBox(height: 20),
-
                 Center(
-                  // `percent_indicator` expects `percent` in the 0.0..1.0 range.
                   child: CircularPercentIndicator(
-                    radius: 105.0,
-                    lineWidth: 14.0,
-
+                    radius: 105,
+                    lineWidth: 14,
                     percent: progresoDecimal,
-
                     animation: true,
                     animateFromLastPercent: true,
                     animationDuration: 600,
                     circularStrokeCap: CircularStrokeCap.round,
-
                     backgroundColor: const Color(0xFF1E293B),
                     progressColor: const Color(0xFF6CFAFF),
-
                     center: Column(
                       mainAxisSize: MainAxisSize.min,
-                      children: <Widget>[
+                      children: [
                         Text(
                           '${(progresoDecimal * 100).toInt()}%',
                           style: TextStyle(
@@ -172,7 +241,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           'COMPLETED',
                           style: TextStyle(
                             fontSize: 11,
-                            letterSpacing: 2.0,
+                            letterSpacing: 2,
                             color: textMuted,
                           ),
                         ),
@@ -180,10 +249,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                   ),
                 ),
-
                 const SizedBox(height: 30),
-
-                Column(children: _buildHabitTiles(todayKey)),
+                Column(
+                  children: _buildHabitTiles(
+                    todayKey: todayKey,
+                    habits: habits,
+                  ),
+                ),
               ],
             ),
           ),
