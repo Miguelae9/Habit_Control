@@ -1,199 +1,401 @@
-import 'dart:convert';
+import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:habit_control/screens/input_log/models/daily_metrics.dart';
+import 'package:habit_control/screens/input_log/models/metric_definition.dart';
+import 'package:habit_control/screens/input_log/models/metric_entry.dart';
+import 'package:habit_control/shared/data/local/metric_definition_db.dart';
+import 'package:habit_control/shared/data/local/metric_entry_db.dart';
 
-/// Stores per-day "daily metrics" and synchronizes them with Firestore.
+/// Store de métricas diarias basado en:
+/// - definiciones de métricas (qué es cada métrica)
+/// - registros diarios por fecha (qué valor tuvo cada día)
 ///
-/// Visible persistence:
-/// - Local cache in [SharedPreferences] under [_prefsKey]
-/// - Pending day keys under [_pendingKey] (used for best-effort retry sync)
+/// Persistencia local:
+/// - SQLite mediante [MetricDefinitionDb] y [MetricEntryDb]
 ///
-/// Visible Firestore paths:
-/// - `users/{uid}/metrics/{dayKey}`
+/// Sincronización remota:
+/// - Firestore en `users/{uid}/metric_definitions/{metricId}`
+/// - Firestore en `users/{uid}/metric_entries/{metricId_dayKey}`
 class DailyMetricsStore extends ChangeNotifier {
-  static const _pendingKey = 'daily_metrics_pending_days_v1';
-  final Set<String> _pendingDays = <String>{};
-
-  /// Creates the store.
-  ///
-  /// Optional [auth] and [firestore] parameters are used for dependency
-  /// injection in tests or previews.
-  DailyMetricsStore({FirebaseAuth? auth, FirebaseFirestore? firestore})
-    : _auth = auth ?? FirebaseAuth.instance,
-      _db = firestore ?? FirebaseFirestore.instance;
+  DailyMetricsStore({
+    FirebaseAuth? auth,
+    FirebaseFirestore? firestore,
+    MetricDefinitionDb? definitionsDb,
+    MetricEntryDb? entriesDb,
+  }) : _auth = auth ?? FirebaseAuth.instance,
+       _db = firestore ?? FirebaseFirestore.instance,
+       _definitionsDb = definitionsDb ?? MetricDefinitionDb.instance,
+       _entriesDb = entriesDb ?? MetricEntryDb.instance;
 
   final FirebaseAuth _auth;
   final FirebaseFirestore _db;
+  final MetricDefinitionDb _definitionsDb;
+  final MetricEntryDb _entriesDb;
 
-  static const _prefsKey = 'daily_metrics_by_day_v1';
+  final List<MetricDefinition> _definitions = <MetricDefinition>[];
+  final Map<String, MetricEntry> _entriesByCompositeKey =
+      <String, MetricEntry>{};
 
-  final Map<String, DailyMetrics> _byDay = {};
+  bool _loadedLocal = false;
 
-  /// Returns stored metrics for [dayKey] or a zero-value default.
-  DailyMetrics metricsForDay(String dayKey) {
-    return _byDay[dayKey] ??
-        const DailyMetrics(sleepHours: 0, energy: 0, socialHours: 0);
+  List<MetricDefinition> get definitions => List.unmodifiable(_definitions);
+
+  bool get loadedLocal => _loadedLocal;
+
+  String _entryKey(String metricId, String dayKey) => '$metricId|$dayKey';
+
+  /// Devuelve las definiciones activas ordenadas por posición.
+  List<MetricDefinition> getActiveDefinitions() {
+    final items = _definitions.where((item) => !item.deleted).toList();
+    items.sort((a, b) => a.position.compareTo(b.position));
+    return items;
   }
 
-  /// Loads cached metrics and pending sync markers from [SharedPreferences].
+  /// Devuelve el valor numérico de una métrica para un día.
+  /// Si no existe, devuelve 0.
+  double valueForDay({required String metricId, required String dayKey}) {
+    return _entriesByCompositeKey[_entryKey(metricId, dayKey)]?.numericValue ??
+        0.0;
+  }
+
+  bool _isProtectedBaseMetricId(String id) {
+    return id == 'metric_sleep_hours' || id == 'metric_energy';
+  }
+
+  /// Carga SQLite y si no hay definiciones, crea unas métricas base iniciales.
   Future<void> loadLocal() async {
-    final prefs = await SharedPreferences.getInstance();
+    final localDefinitions = await _definitionsDb.getActiveDefinitions();
 
-    // Loads the metrics map if present.
-    final raw = prefs.getString(_prefsKey);
-    if (raw != null && raw.isNotEmpty) {
-      final Map<String, dynamic> decoded = jsonDecode(raw);
-      _byDay
-        ..clear()
-        ..addAll(
-          decoded.map((k, v) {
-            return MapEntry(
-              k,
-              DailyMetrics.fromMap((v as Map).cast<String, dynamic>()),
-            );
-          }),
+    _definitions
+      ..clear()
+      ..addAll(localDefinitions);
+
+    if (_definitions.isEmpty) {
+      await _seedBaseDefinitions();
+    }
+
+    _loadedLocal = true;
+    notifyListeners();
+  }
+
+  Future<void> _seedBaseDefinitions() async {
+    final now = DateTime.now().millisecondsSinceEpoch;
+
+    final items = <MetricDefinition>[
+      MetricDefinition(
+        id: 'metric_sleep_hours',
+        name: 'SUEÑO',
+        semanticCategory: 'sleep',
+        valueType: 'double',
+        unit: 'h',
+        interpretation: 'higher_better',
+        position: 0,
+        updatedAt: now,
+      ),
+      MetricDefinition(
+        id: 'metric_energy',
+        name: 'ENERGÍA',
+        semanticCategory: 'energy',
+        valueType: 'int',
+        unit: '/10',
+        interpretation: 'higher_better',
+        position: 1,
+        updatedAt: now,
+      ),
+    ];
+
+    for (final item in items) {
+      _definitions.add(item);
+      await _definitionsDb.insertOrReplace(item, dirty: true);
+    }
+
+    notifyListeners();
+    unawaited(trySyncPending());
+  }
+
+  /// Carga todos los registros de un día concreto desde SQLite.
+  Future<void> loadEntriesForDay(String dayKey) async {
+    final entries = await _entriesDb.getEntriesForDay(dayKey);
+
+    for (final entry in entries) {
+      _entriesByCompositeKey[_entryKey(entry.metricId, entry.dayKey)] = entry;
+    }
+
+    notifyListeners();
+  }
+
+  /// Guarda localmente el valor de una métrica para un día y marca pendiente de sync.
+  Future<void> setMetricValue({
+    required String metricId,
+    required String dayKey,
+    required double numericValue,
+  }) async {
+    final entry = MetricEntry(
+      metricId: metricId,
+      dayKey: dayKey,
+      numericValue: numericValue,
+      updatedAt: DateTime.now().millisecondsSinceEpoch,
+    );
+
+    _entriesByCompositeKey[_entryKey(metricId, dayKey)] = entry;
+    notifyListeners();
+
+    await _entriesDb.insertOrReplace(entry, dirty: true);
+    unawaited(trySyncPending());
+  }
+
+  /// Permite crear una métrica personalizada estructurada.
+  Future<void> addMetricDefinition({
+    required String name,
+    required String semanticCategory,
+    required String valueType,
+    required String interpretation,
+    String? unit,
+  }) async {
+    final now = DateTime.now().millisecondsSinceEpoch;
+
+    final definition = MetricDefinition(
+      id: 'metric_$now',
+      name: name.trim().toUpperCase(),
+      semanticCategory: semanticCategory.trim(),
+      valueType: valueType.trim(),
+      unit: unit?.trim().isEmpty == true ? null : unit?.trim(),
+      interpretation: interpretation.trim(),
+      position: _definitions.length,
+      updatedAt: now,
+    );
+
+    _definitions.add(definition);
+    notifyListeners();
+
+    await _definitionsDb.insertOrReplace(definition, dirty: true);
+    unawaited(trySyncPending());
+  }
+
+  /// Sincroniza pendientes locales a Firestore.
+  Future<void> trySyncPending() async {
+    final uid = _auth.currentUser?.uid;
+    if (uid == null) return;
+
+    await _syncDirtyDefinitions(uid);
+    await _syncDirtyEntries(uid);
+  }
+
+  Future<void> _syncDirtyDefinitions(String uid) async {
+    final dirtyDefinitions = await _definitionsDb.getDirtyDefinitions();
+    if (dirtyDefinitions.isEmpty) return;
+
+    for (final definition in dirtyDefinitions) {
+      try {
+        final ref = _db
+            .collection('users')
+            .doc(uid)
+            .collection('metric_definitions')
+            .doc(definition.id);
+
+        if (definition.deleted) {
+          await ref.delete();
+          await _definitionsDb.purgeDeleted(definition.id);
+        } else {
+          await ref.set({
+            'name': definition.name,
+            'semanticCategory': definition.semanticCategory,
+            'valueType': definition.valueType,
+            'unit': definition.unit,
+            'interpretation': definition.interpretation,
+            'position': definition.position,
+            'updatedAtMs': definition.updatedAt,
+            'updatedAt': FieldValue.serverTimestamp(),
+          }, SetOptions(merge: true));
+
+          await _definitionsDb.markClean(definition.id);
+        }
+      } on FirebaseException catch (e) {
+        debugPrint('DailyMetricsStore _syncDirtyDefinitions failed: ${e.code}');
+      } catch (e) {
+        debugPrint('DailyMetricsStore _syncDirtyDefinitions failed: $e');
+      }
+    }
+  }
+
+  Future<void> _syncDirtyEntries(String uid) async {
+    final dirtyEntries = await _entriesDb.getDirtyEntries();
+    if (dirtyEntries.isEmpty) return;
+
+    for (final entry in dirtyEntries) {
+      try {
+        final docId = '${entry.metricId}_${entry.dayKey}';
+
+        await _db
+            .collection('users')
+            .doc(uid)
+            .collection('metric_entries')
+            .doc(docId)
+            .set({
+              'metricId': entry.metricId,
+              'dayKey': entry.dayKey,
+              'numericValue': entry.numericValue,
+              'updatedAtMs': entry.updatedAt,
+              'updatedAt': FieldValue.serverTimestamp(),
+            }, SetOptions(merge: true));
+
+        await _entriesDb.markClean(
+          metricId: entry.metricId,
+          dayKey: entry.dayKey,
         );
+      } on FirebaseException catch (e) {
+        debugPrint('DailyMetricsStore _syncDirtyEntries failed: ${e.code}');
+      } catch (e) {
+        debugPrint('DailyMetricsStore _syncDirtyEntries failed: $e');
+      }
     }
-
-    // Loads pending days independently of whether metrics are present.
-    final pendingRaw = prefs.getString(_pendingKey);
-    if (pendingRaw != null && pendingRaw.isNotEmpty) {
-      final List<dynamic> decodedPending = jsonDecode(pendingRaw);
-      _pendingDays
-        ..clear()
-        ..addAll(decodedPending.cast<String>());
-    }
-
-    notifyListeners();
   }
 
-  Future<void> _savePending() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_pendingKey, jsonEncode(_pendingDays.toList()));
-  }
-
-  /// Updates metrics for [dayKey], persists locally, and writes to Firestore when
-  /// a Firebase user is available.
-  ///
-  /// On Firestore write failure, [dayKey] is added to the pending set so it can
-  /// be retried via [trySyncPending].
-  Future<void> setMetrics(String dayKey, DailyMetrics value) async {
-    _byDay[dayKey] = value;
-
-    notifyListeners();
-    await _saveLocal();
-
+  /// Trae de Firestore las definiciones del usuario y sustituye las locales.
+  Future<void> syncDefinitionsFromCloud() async {
     final uid = _auth.currentUser?.uid;
     if (uid == null) return;
 
     try {
-      await _db
+      final snapshot = await _db
           .collection('users')
           .doc(uid)
-          .collection('metrics')
-          .doc(dayKey)
-          .set(_withUpdatedAt(value), SetOptions(merge: true));
+          .collection('metric_definitions')
+          .orderBy('position')
+          .get();
 
-      _pendingDays.remove(dayKey);
-      await _savePending();
+      final definitions = snapshot.docs.map((doc) {
+        final data = doc.data();
+
+        return MetricDefinition(
+          id: doc.id,
+          name: (data['name'] as String?) ?? '',
+          semanticCategory: (data['semanticCategory'] as String?) ?? '',
+          valueType: (data['valueType'] as String?) ?? 'double',
+          unit: data['unit'] as String?,
+          interpretation: (data['interpretation'] as String?) ?? 'neutral',
+          position: (data['position'] as num?)?.toInt() ?? 0,
+          updatedAt: (data['updatedAtMs'] as num?)?.toInt() ?? 0,
+          deleted: false,
+        );
+      }).toList();
+
+      await _definitionsDb.replaceAllFromCloud(definitions);
+
+      _definitions
+        ..clear()
+        ..addAll(definitions);
+
+      notifyListeners();
     } on FirebaseException catch (e) {
-      debugPrint('Firestore setMetrics failed: ${e.code}');
-      _pendingDays.add(dayKey);
-      await _savePending();
+      debugPrint(
+        'DailyMetricsStore syncDefinitionsFromCloud failed: ${e.code}',
+      );
     } catch (e) {
-      debugPrint('setMetrics failed: $e');
-      _pendingDays.add(dayKey);
-      await _savePending();
+      debugPrint('DailyMetricsStore syncDefinitionsFromCloud failed: $e');
     }
   }
 
-  Map<String, dynamic> _withUpdatedAt(DailyMetrics value) {
-    final map = value.toMap();
-    map['updatedAt'] = FieldValue.serverTimestamp();
-    return map;
-  }
-
-  /// Reads metrics for [dayKey] from Firestore and overwrites the local cache.
+  /// Trae de Firestore los registros diarios del día indicado y los guarda en SQLite.
   Future<void> syncDayFromCloud(String dayKey) async {
     final uid = _auth.currentUser?.uid;
     if (uid == null) return;
 
     try {
-      final doc = await _db
+      final snapshot = await _db
           .collection('users')
           .doc(uid)
-          .collection('metrics')
-          .doc(dayKey)
+          .collection('metric_entries')
+          .where('dayKey', isEqualTo: dayKey)
           .get();
-      if (!doc.exists) return;
 
-      _byDay[dayKey] = DailyMetrics.fromMap(doc.data());
+      final entries = snapshot.docs.map((doc) {
+        final data = doc.data();
+        final raw = data['numericValue'];
+
+        return MetricEntry(
+          metricId: (data['metricId'] as String?) ?? '',
+          dayKey: (data['dayKey'] as String?) ?? dayKey,
+          numericValue: raw is int ? raw.toDouble() : (raw as double? ?? 0.0),
+          updatedAt: (data['updatedAtMs'] as num?)?.toInt() ?? 0,
+        );
+      }).toList();
+
+      for (final entry in entries) {
+        await _entriesDb.insertOrReplace(entry, dirty: false);
+        _entriesByCompositeKey[_entryKey(entry.metricId, entry.dayKey)] = entry;
+      }
 
       notifyListeners();
-      await _saveLocal();
     } on FirebaseException catch (e) {
-      debugPrint('Firestore sync metrics failed: ${e.code}');
+      debugPrint('DailyMetricsStore syncDayFromCloud failed: ${e.code}');
     } catch (e) {
-      debugPrint('sync metrics failed: $e');
+      debugPrint('DailyMetricsStore syncDayFromCloud failed: $e');
     }
   }
 
-  Future<void> _saveLocal() async {
-    final prefs = await SharedPreferences.getInstance();
-    final map = _byDay.map((k, v) {
-      return MapEntry(k, v.toMap());
-    });
-    await prefs.setString(_prefsKey, jsonEncode(map));
-  }
-
-  /// Attempts to flush any pending days to Firestore.
-  ///
-  /// The method iterates over a snapshot of pending day keys and, on successful
-  /// write, removes each day from the pending set.
-  Future<void> trySyncPending() async {
-    final uid = _auth.currentUser?.uid;
-    if (uid == null) return;
-    if (_pendingDays.isEmpty) return;
-
-    final List<String> days = _pendingDays.toList();
-
-    for (final dayKey in days) {
-      final DailyMetrics value =
-          _byDay[dayKey] ??
-          const DailyMetrics(sleepHours: 0, energy: 0, socialHours: 0);
-
-      try {
-        await _db
-            .collection('users')
-            .doc(uid)
-            .collection('metrics')
-            .doc(dayKey)
-            .set(_withUpdatedAt(value), SetOptions(merge: true));
-
-        _pendingDays.remove(dayKey);
-        await _savePending();
-      } on FirebaseException catch (e) {
-        debugPrint('trySyncPending metrics failed: ${e.code}');
-      } catch (e) {
-        debugPrint('trySyncPending metrics failed: $e');
-      }
-    }
-  }
-
-  /// Clears local caches (metrics + pending markers) from memory and storage.
   Future<void> clearAll() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_prefsKey);
-    await prefs.remove(_pendingKey);
-
-    _byDay.clear();
-    _pendingDays.clear();
+    _definitions.clear();
+    _entriesByCompositeKey.clear();
+    _loadedLocal = false;
 
     notifyListeners();
+
+    await _definitionsDb.clearAll();
+    await _entriesDb.clearAll();
+  }
+
+  Future<void> updateMetricDefinition({
+    required String id,
+    required String name,
+    required String semanticCategory,
+    required String valueType,
+    required String interpretation,
+    String? unit,
+  }) async {
+    if (_isProtectedBaseMetricId(id)) return;
+    final index = _definitions.indexWhere((item) => item.id == id);
+    if (index == -1) return;
+
+    final current = _definitions[index];
+    final updated = current.copyWith(
+      name: name.trim().toUpperCase(),
+      semanticCategory: semanticCategory.trim(),
+      valueType: valueType.trim(),
+      interpretation: interpretation.trim(),
+      unit: unit?.trim().isEmpty == true ? null : unit?.trim(),
+      updatedAt: DateTime.now().millisecondsSinceEpoch,
+    );
+
+    _definitions[index] = updated;
+    notifyListeners();
+
+    await _definitionsDb.insertOrReplace(updated, dirty: true);
+    unawaited(trySyncPending());
+  }
+
+  Future<void> deleteMetricDefinition(String id) async {
+    if (_isProtectedBaseMetricId(id)) return;
+    final index = _definitions.indexWhere((item) => item.id == id);
+    if (index == -1) return;
+
+    final current = _definitions[index];
+    final deleted = current.copyWith(
+      deleted: true,
+      updatedAt: DateTime.now().millisecondsSinceEpoch,
+    );
+
+    _definitions[index] = deleted;
+    notifyListeners();
+
+    await _definitionsDb.markDeleted(id: id, updatedAt: deleted.updatedAt);
+
+    _definitions.removeWhere((item) => item.id == id);
+    notifyListeners();
+
+    unawaited(trySyncPending());
   }
 }

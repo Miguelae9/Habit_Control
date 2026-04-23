@@ -3,18 +3,18 @@ import 'package:provider/provider.dart';
 
 import 'package:habit_control/shared/widgets/lateral_menu/lateral_menu.dart';
 import 'package:habit_control/shared/widgets/online_badge.dart';
-
 import 'package:habit_control/shared/state/daily_metrics_store.dart';
 import 'package:habit_control/shared/utils/day_key.dart';
-import 'package:habit_control/screens/input_log/models/daily_metrics.dart';
+import 'package:habit_control/screens/input_log/models/metric_definition.dart';
 import 'package:habit_control/screens/input_log/widgets/metric_row.dart';
+import 'package:habit_control/screens/input_log/widgets/create_metric_dialog.dart';
+import 'package:habit_control/screens/input_log/widgets/edit_metric_dialog.dart';
 
-/// Screen for editing daily metric inputs (sleep, energy, social hours).
+/// Pantalla de registro diario de métricas.
 ///
-/// Visible data source:
-/// - Reads and writes values via [DailyMetricsStore] using today's `YYYY-MM-DD` key.
+/// Por ahora usa la fecha de hoy.
+/// Más adelante podrá recibir la fecha activa global desde dashboard.
 class InputLogScreen extends StatefulWidget {
-  /// Creates the input log screen.
   const InputLogScreen({super.key});
 
   @override
@@ -22,106 +22,173 @@ class InputLogScreen extends StatefulWidget {
 }
 
 class _InputLogScreenState extends State<InputLogScreen> {
-  late String _todayKey;
-
-  double _sleepHours = 0.0;
-  int _energy = 0;
-  double _socialHours = 0.0;
+  late final String _dayKey;
+  bool _loading = true;
 
   @override
   void initState() {
     super.initState();
-
-    _todayKey = dayKeyFromDate(DateTime.now());
-
-    final DailyMetricsStore store = context.read<DailyMetricsStore>();
-    final DailyMetrics initial = store.metricsForDay(_todayKey);
-
-    _sleepHours = initial.sleepHours;
-    _energy = initial.energy;
-    _socialHours = initial.socialHours;
-
-    WidgetsBinding.instance.addPostFrameCallback(_afterFirstFrame);
+    _dayKey = dayKeyFromDate(DateTime.now());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadScreenData();
+    });
   }
 
-  void _afterFirstFrame(Duration _) async {
-    final DailyMetricsStore store = context.read<DailyMetricsStore>();
+  Future<void> _loadScreenData() async {
+    final store = context.read<DailyMetricsStore>();
 
-    // Refreshes local values from Firestore after first render, if available.
-    await store.syncDayFromCloud(_todayKey);
+    await store.loadEntriesForDay(_dayKey);
+    await store.syncDefinitionsFromCloud();
+    await store.syncDayFromCloud(_dayKey);
+    await store.loadEntriesForDay(_dayKey);
 
-    final DailyMetrics fresh = store.metricsForDay(_todayKey);
     if (!mounted) return;
 
     setState(() {
-      _sleepHours = fresh.sleepHours;
-      _energy = fresh.energy;
-      _socialHours = fresh.socialHours;
+      _loading = false;
     });
   }
 
-  void _persistNow() {
-    final DailyMetricsStore store = context.read<DailyMetricsStore>();
-    final DailyMetrics value = DailyMetrics(
-      sleepHours: _sleepHours,
-      energy: _energy,
-      socialHours: _socialHours,
+  double _stepFor(MetricDefinition definition) {
+    switch (definition.valueType) {
+      case 'int':
+        return 1.0;
+      case 'double':
+        return 0.5;
+      default:
+        return 1.0;
+    }
+  }
+
+  double _maxFor(MetricDefinition definition) {
+    switch (definition.semanticCategory) {
+      case 'sleep':
+        return 24.0;
+      case 'energy':
+        return 10.0;
+      case 'social':
+        return 24.0;
+      default:
+        return 9999.0;
+    }
+  }
+
+  double _minFor(MetricDefinition definition) {
+    return 0.0;
+  }
+
+  String _labelFor(MetricDefinition definition) {
+    if (definition.unit == null || definition.unit!.trim().isEmpty) {
+      return definition.name;
+    }
+    return '${definition.name} (${definition.unit})';
+  }
+
+  String _valueText(MetricDefinition definition, double value) {
+    if (definition.valueType == 'int') {
+      return value.round().toString();
+    }
+    return value.toStringAsFixed(1);
+  }
+
+  Future<void> _changeValue(MetricDefinition definition, bool increase) async {
+    final store = context.read<DailyMetricsStore>();
+
+    final current = store.valueForDay(metricId: definition.id, dayKey: _dayKey);
+
+    final step = _stepFor(definition);
+    final min = _minFor(definition);
+    final max = _maxFor(definition);
+
+    final next = increase
+        ? (current + step).clamp(min, max)
+        : (current - step).clamp(min, max);
+
+    await store.setMetricValue(
+      metricId: definition.id,
+      dayKey: _dayKey,
+      numericValue: next,
     );
-    store.setMetrics(_todayKey, value);
+
+    if (!mounted) return;
+    setState(() {});
   }
 
-  void _sleepMinus() {
-    setState(() {
-      _sleepHours = (_sleepHours - 0.5).clamp(0.0, 12.0);
-    });
-    _persistNow();
+  Future<void> _openCreateMetricDialog() async {
+    final created = await showDialog<bool>(
+      context: context,
+      builder: (_) => const CreateMetricDialog(),
+    );
+
+    if (created == true && mounted) {
+      setState(() {});
+    }
   }
 
-  void _sleepPlus() {
-    setState(() {
-      _sleepHours = (_sleepHours + 0.5).clamp(0.0, 12.0);
-    });
-    _persistNow();
+  Future<void> _openEditMetricDialog(MetricDefinition definition) async {
+    final updated = await showDialog<bool>(
+      context: context,
+      builder: (_) => EditMetricDialog(definition: definition),
+    );
+
+    if (updated == true && mounted) {
+      setState(() {});
+    }
   }
 
-  void _energyMinus() {
-    setState(() {
-      _energy = (_energy - 1).clamp(0, 10);
-    });
-    _persistNow();
+  Future<void> _confirmDeleteMetric(MetricDefinition definition) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          title: const Text('Eliminar métrica'),
+          content: Text('¿Quieres eliminar "${definition.name}"?'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(false),
+              child: const Text('Cancelar'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.of(ctx).pop(true),
+              child: const Text('Eliminar'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed != true) return;
+
+    await context.read<DailyMetricsStore>().deleteMetricDefinition(
+      definition.id,
+    );
+
+    if (!mounted) return;
+    setState(() {});
   }
 
-  void _energyPlus() {
-    setState(() {
-      _energy = (_energy + 1).clamp(0, 10);
-    });
-    _persistNow();
-  }
-
-  void _socialMinus() {
-    setState(() {
-      _socialHours = (_socialHours - 0.5).clamp(0.0, 10.0);
-    });
-    _persistNow();
-  }
-
-  void _socialPlus() {
-    setState(() {
-      _socialHours = (_socialHours + 0.5).clamp(0.0, 10.0);
-    });
-    _persistNow();
+  bool _isProtectedBaseMetric(MetricDefinition definition) {
+    return definition.id == 'metric_sleep_hours' ||
+        definition.id == 'metric_energy';
   }
 
   @override
   Widget build(BuildContext context) {
-    final ThemeData theme = Theme.of(context);
+    final theme = Theme.of(context);
+    final store = context.watch<DailyMetricsStore>();
 
-    final Color bg = theme.scaffoldBackgroundColor;
-    final Color textMain = theme.textTheme.bodyLarge?.color ?? Colors.white;
-    final Color textMuted = theme.textTheme.bodyMedium?.color ?? Colors.grey;
-    final Color accent = theme.primaryColor;
+    final bg = theme.scaffoldBackgroundColor;
+    final textMain = theme.textTheme.bodyLarge?.color ?? Colors.white;
+    final textMuted = theme.textTheme.bodyMedium?.color ?? Colors.grey;
+    final accent = theme.primaryColor;
+
+    final definitions = store.getActiveDefinitions();
 
     return Scaffold(
+      floatingActionButton: FloatingActionButton(
+        onPressed: _openCreateMetricDialog,
+        child: const Icon(Icons.add),
+      ),
       backgroundColor: bg,
       drawer: const Drawer(child: LateralMenu()),
       body: SafeArea(
@@ -184,40 +251,67 @@ class _InputLogScreenState extends State<InputLogScreen> {
                         ),
                   ),
                   const SizedBox(height: 28),
-
-                  MetricRow(
-                    label: 'SLEEP HOURS',
-                    value: _sleepHours.toStringAsFixed(1),
-                    onMinus: _sleepMinus,
-                    onPlus: _sleepPlus,
-                    textColor: textMuted,
-                    valueColor: textMain,
-                    accent: accent,
+                  Text(
+                    _dayKey,
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: textMuted,
+                      letterSpacing: 1.4,
+                    ),
                   ),
+                  const SizedBox(height: 24),
 
-                  const SizedBox(height: 28),
+                  if (_loading)
+                    const Center(
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(vertical: 32),
+                        child: CircularProgressIndicator(),
+                      ),
+                    )
+                  else if (definitions.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 24),
+                      child: Text(
+                        'NO METRICS AVAILABLE',
+                        textAlign: TextAlign.center,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: textMuted,
+                          letterSpacing: 1.4,
+                        ),
+                      ),
+                    )
+                  else
+                    ...definitions.asMap().entries.map((entry) {
+                      final index = entry.key;
+                      final definition = entry.value;
 
-                  MetricRow(
-                    label: 'ENERGY (0-10)',
-                    value: '$_energy',
-                    onMinus: _energyMinus,
-                    onPlus: _energyPlus,
-                    textColor: textMuted,
-                    valueColor: textMain,
-                    accent: accent,
-                  ),
+                      final value = store.valueForDay(
+                        metricId: definition.id,
+                        dayKey: _dayKey,
+                      );
 
-                  const SizedBox(height: 28),
-
-                  MetricRow(
-                    label: 'SOCIAL HOURS',
-                    value: _socialHours.toStringAsFixed(1),
-                    onMinus: _socialMinus,
-                    onPlus: _socialPlus,
-                    textColor: textMuted,
-                    valueColor: textMain,
-                    accent: accent,
-                  ),
+                      return Padding(
+                        padding: EdgeInsets.only(
+                          bottom: index == definitions.length - 1 ? 0 : 28,
+                        ),
+                        child: MetricRow(
+                          label: _labelFor(definition),
+                          value: _valueText(definition, value),
+                          onMinus: () => _changeValue(definition, false),
+                          onPlus: () => _changeValue(definition, true),
+                          onEdit: _isProtectedBaseMetric(definition)
+                              ? null
+                              : () => _openEditMetricDialog(definition),
+                          onDelete: _isProtectedBaseMetric(definition)
+                              ? null
+                              : () => _confirmDeleteMetric(definition),
+                          textColor: textMuted,
+                          valueColor: textMain,
+                          accent: accent,
+                          suffix: definition.unit,
+                        ),
+                      );
+                    }),
                 ],
               ),
             ),
