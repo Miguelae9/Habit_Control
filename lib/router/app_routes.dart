@@ -3,6 +3,7 @@ import 'package:habit_control/screens/analytics/analytics_screen.dart';
 import 'package:habit_control/screens/auth/register.dart';
 import 'package:habit_control/screens/credits/credits_screen.dart';
 import 'package:habit_control/screens/dashboard/dashboard_screen.dart';
+import 'package:habit_control/screens/habits/habits_screen.dart';
 import 'package:habit_control/screens/input_log/input_log_screen.dart';
 import 'package:habit_control/screens/settings/settings_screen.dart';
 import 'package:habit_control/screens/splash/splash_screen.dart';
@@ -22,10 +23,13 @@ class AppRoutes {
   static const register = '/register';
 
   /// Route name for the credits screen.
+  static const dashboard = '/dashboard';
+
+  /// Route name for the credits screen.
   static const credits = '/credits';
 
-  /// Route name for the dashboard screen.
-  static const dashboard = '/dashboard';
+  /// Route name for the habits screen.
+  static const habits = '/habits';
 
   /// Route name for the input log screen.
   static const inputLog = '/input_log';
@@ -41,8 +45,9 @@ class AppRoutes {
     splash: (context) => const SplashScreen(),
     home: (context) => const LoginScreen(),
     register: (context) => const RegisterScreen(),
-    credits: (context) => const CreditsScreen(),
     dashboard: (context) => const DashboardScreen(),
+    credits: (context) => const CreditsScreen(),
+    habits: (context) => const HabitsScreen(),
     inputLog: (context) => const InputLogScreen(),
     analytics: (context) => const AnalyticsScreen(),
     settings: (context) => const SettingsScreen(),

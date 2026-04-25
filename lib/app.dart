@@ -95,7 +95,7 @@ class _MyAppState extends State<MyApp> {
 
   /// Returns whether [routeName] requires an authenticated user.
   static bool _isProtectedRoute(String routeName) {
-    if (routeName == AppRoutes.dashboard) return true;
+    if (routeName == AppRoutes.habits) return true;
     if (routeName == AppRoutes.inputLog) return true;
     if (routeName == AppRoutes.analytics) return true;
     if (routeName == AppRoutes.settings) return true;

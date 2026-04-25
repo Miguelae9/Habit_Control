@@ -55,6 +55,14 @@ class LateralMenu extends StatelessWidget {
               replace: true,
             ),
             LateralMenuItem(
+              label: 'HABITS',
+              selected: currentRoute == AppRoutes.habits,
+              accent: accent,
+              textMuted: textMuted,
+              routeName: AppRoutes.habits,
+              replace: true,
+            ),
+            LateralMenuItem(
               label: 'INPUT LOG',
               selected: currentRoute == AppRoutes.inputLog,
               accent: accent,

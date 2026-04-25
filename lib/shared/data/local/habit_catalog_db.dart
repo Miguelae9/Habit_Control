@@ -1,7 +1,7 @@
 import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
 
-import 'package:habit_control/screens/dashboard/models/habit.dart';
+import 'package:habit_control/screens/habits/models/habit.dart';
 
 class HabitCatalogDb {
   HabitCatalogDb._();

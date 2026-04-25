@@ -42,7 +42,7 @@ class _SplashScreenState extends State<SplashScreen> {
       await metricsStore.trySyncPending();
     }
 
-    final nextRoute = (user == null) ? AppRoutes.home : AppRoutes.dashboard;
+    final nextRoute = (user == null) ? AppRoutes.home : AppRoutes.habits;
 
     if (!mounted) return;
     Navigator.pushReplacementNamed(context, nextRoute);

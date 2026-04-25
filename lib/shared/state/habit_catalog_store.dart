@@ -4,7 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 
-import 'package:habit_control/screens/dashboard/models/habit.dart';
+import 'package:habit_control/screens/habits/models/habit.dart';
 import 'package:habit_control/shared/data/local/habit_catalog_db.dart';
 
 class HabitCatalogStore extends ChangeNotifier {
