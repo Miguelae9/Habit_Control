@@ -7,6 +7,7 @@ import 'package:habit_control/router/app_routes.dart';
 import 'package:habit_control/theme/app_theme.dart';
 import 'package:habit_control/shared/state/habit_day_store.dart';
 import 'package:habit_control/shared/state/daily_metrics_store.dart';
+import 'package:habit_control/shared/state/weather_store.dart';
 
 import 'dart:async';
 
@@ -61,6 +62,9 @@ class _MyAppState extends State<MyApp> {
         ChangeNotifierProvider<DailyMetricsStore>.value(value: _metricsStore),
         ChangeNotifierProvider<HabitCatalogStore>(
           create: (_) => HabitCatalogStore()..loadLocal(),
+        ),
+        ChangeNotifierProvider<WeatherStore>(
+          create: (_) => WeatherStore()..loadWeather(),
         ),
       ],
       child: MaterialApp(

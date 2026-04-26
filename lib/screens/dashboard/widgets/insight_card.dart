@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
 class InsightCard extends StatelessWidget {
-  const InsightCard({super.key});
+  const InsightCard({super.key, required this.insight});
+
+  final String insight;
 
   @override
   Widget build(BuildContext context) {
@@ -22,7 +24,7 @@ class InsightCard extends StatelessWidget {
           Text('Automatic daily summary', style: theme.textTheme.bodySmall),
           const SizedBox(height: 14),
           Text(
-            'Today you are showing moderate consistency. You started the day stronger than you are finishing it.',
+            insight,
             style: theme.textTheme.bodyMedium?.copyWith(
               color: Colors.white,
               height: 1.4,

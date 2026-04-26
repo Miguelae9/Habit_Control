@@ -4,10 +4,12 @@ import 'package:habit_control/screens/dashboard/widgets/dashboard_header.dart';
 import 'package:habit_control/screens/dashboard/widgets/insight_card.dart';
 import 'package:habit_control/screens/dashboard/widgets/metrics_summary_card.dart';
 import 'package:habit_control/screens/dashboard/widgets/weather_card.dart';
+import 'package:habit_control/shared/state/weather_store.dart';
 import 'package:habit_control/shared/state/daily_metrics_store.dart';
 import 'package:habit_control/shared/state/habit_catalog_store.dart';
 import 'package:habit_control/shared/state/habit_day_store.dart';
 import 'package:habit_control/shared/utils/day_key.dart';
+import 'package:habit_control/screens/dashboard/services/daily_insight_service.dart';
 import 'package:habit_control/shared/widgets/lateral_menu/lateral_menu.dart';
 import 'package:provider/provider.dart';
 
@@ -36,6 +38,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget build(BuildContext context) {
     final habitDayStore = context.watch<HabitDayStore>();
     final metricsStore = context.watch<DailyMetricsStore>();
+    final weatherStore = context.watch<WeatherStore>();
 
     // Ajusta esta línea si en tu store el getter no se llama exactamente "habits".
     final habitCatalogStore = context.watch<HabitCatalogStore>();
@@ -64,6 +67,28 @@ class _DashboardScreenState extends State<DashboardScreen> {
       return MetricSummaryItem(label: definition.name, value: formattedValue);
     }).toList();
 
+    final insightMetrics = activeDefinitions.map((definition) {
+      final value = metricsStore.valueForDay(
+        metricId: definition.id,
+        dayKey: _todayKey,
+      );
+
+      return InsightMetric(
+        name: definition.name,
+        semanticCategory: definition.semanticCategory,
+        value: value,
+        interpretation: definition.interpretation,
+        unit: definition.unit,
+      );
+    }).toList();
+
+    final insight = const DailyInsightService().buildInsight(
+      completedHabits: completedHabits,
+      totalHabits: totalHabits,
+      metrics: insightMetrics,
+      weatherContext: weatherStore.weather?.habitContext,
+    );
+
     return Scaffold(
       drawer: const Drawer(
         backgroundColor: Color.fromARGB(34, 0, 70, 221),
@@ -79,9 +104,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
               children: [
                 const DashboardHeader(),
                 const SizedBox(height: 16),
-                const WeatherCard(),
+                WeatherCard(
+                  weather: weatherStore.weather,
+                  loading: weatherStore.loading,
+                  error: weatherStore.error,
+                ),
                 const SizedBox(height: 16),
-                const InsightCard(),
+                InsightCard(insight: insight),
                 const SizedBox(height: 16),
                 DailyProgressCard(
                   completedHabits: completedHabits,

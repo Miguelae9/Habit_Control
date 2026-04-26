@@ -123,7 +123,7 @@ class _EditMetricDialogState extends State<EditMetricDialog> {
             ),
             const SizedBox(height: 14),
             DropdownButtonFormField<String>(
-              value: _semanticCategory,
+              initialValue: _semanticCategory,
               items: _categoryItems,
               decoration: const InputDecoration(
                 labelText: 'Categoría semántica',
@@ -137,7 +137,7 @@ class _EditMetricDialogState extends State<EditMetricDialog> {
             ),
             const SizedBox(height: 14),
             DropdownButtonFormField<String>(
-              value: _valueType,
+              initialValue: _valueType,
               items: _valueTypeItems,
               decoration: const InputDecoration(labelText: 'Tipo de valor'),
               onChanged: (value) {
@@ -157,7 +157,7 @@ class _EditMetricDialogState extends State<EditMetricDialog> {
             ),
             const SizedBox(height: 14),
             DropdownButtonFormField<String>(
-              value: _interpretation,
+              initialValue: _interpretation,
               items: _interpretationItems,
               decoration: const InputDecoration(labelText: 'Interpretación'),
               onChanged: (value) {

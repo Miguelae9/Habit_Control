@@ -1,12 +1,35 @@
 import 'package:flutter/material.dart';
+import 'package:habit_control/screens/dashboard/models/weather_info.dart';
 
 class WeatherCard extends StatelessWidget {
-  const WeatherCard({super.key});
+  const WeatherCard({
+    super.key,
+    required this.weather,
+    required this.loading,
+    required this.error,
+  });
+
+  final WeatherInfo? weather;
+  final bool loading;
+  final String? error;
 
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
     final isMobile = width < 600;
+
+    final title = weather?.city.toUpperCase() ?? 'WEATHER';
+    final temperature = weather == null
+        ? '--ºC'
+        : '${weather!.temperature.round()}ºC';
+    final humidity = weather == null ? '--%' : '${weather!.humidity}%';
+    final wind = weather == null
+        ? '-- km/h'
+        : '${weather!.windSpeed.round()} km/h';
+
+    final message = loading
+        ? 'Loading weather...'
+        : error ?? weather?.habitContext ?? 'Weather data unavailable.';
 
     return Container(
       width: double.infinity,
@@ -20,7 +43,7 @@ class WeatherCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'MÁLAGA, ES',
+            title,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: Theme.of(context).textTheme.bodySmall,
@@ -31,7 +54,7 @@ class WeatherCard extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  '18ºC',
+                  temperature,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -46,12 +69,12 @@ class WeatherCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
-                    'HUM.: 45%',
+                    'HUM.: $humidity',
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    'WIND: 12 km/h',
+                    'WIND: $wind',
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
                 ],
@@ -60,7 +83,7 @@ class WeatherCard extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           Text(
-            'Buen momento para mantener la rutina.',
+            message,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
             style: Theme.of(context).textTheme.bodyMedium,
