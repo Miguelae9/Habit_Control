@@ -179,7 +179,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 const SizedBox(height: 20),
 
                 Text(
-                  'v0.1.0 [MVP_BUILD]',
+                  'v1.4.0 [MVP_BUILD]',
                   textAlign: TextAlign.center,
                   style: theme.textTheme.bodySmall?.copyWith(
                     fontSize: 10,

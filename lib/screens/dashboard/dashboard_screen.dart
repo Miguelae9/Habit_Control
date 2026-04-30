@@ -83,8 +83,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }).toList();
 
     final insight = const DailyInsightService().buildInsight(
-      completedHabits: completedHabits,
-      totalHabits: totalHabits,
+      habits: activeHabits,
+      completedHabitIds: doneToday,
       metrics: insightMetrics,
       weatherContext: weatherStore.weather?.habitContext,
     );

@@ -30,6 +30,9 @@ class DailyMetricsStore extends ChangeNotifier {
        _definitionsDb = definitionsDb ?? MetricDefinitionDb.instance,
        _entriesDb = entriesDb ?? MetricEntryDb.instance;
 
+  static const String sleepMetricId = 'metric_sleep_hours';
+  static const String energyMetricId = 'metric_energy';
+
   final FirebaseAuth _auth;
   final FirebaseFirestore _db;
   final MetricDefinitionDb _definitionsDb;
@@ -62,7 +65,7 @@ class DailyMetricsStore extends ChangeNotifier {
   }
 
   bool _isProtectedBaseMetricId(String id) {
-    return id == 'metric_sleep_hours' || id == 'metric_energy';
+    return id == sleepMetricId || id == energyMetricId;
   }
 
   /// Carga SQLite y si no hay definiciones, crea unas métricas base iniciales.
@@ -73,21 +76,19 @@ class DailyMetricsStore extends ChangeNotifier {
       ..clear()
       ..addAll(localDefinitions);
 
-    if (_definitions.isEmpty) {
-      await _seedBaseDefinitions();
-    }
+    await _ensureBaseDefinitions();
 
     _loadedLocal = true;
     notifyListeners();
   }
 
-  Future<void> _seedBaseDefinitions() async {
+  Future<void> _ensureBaseDefinitions() async {
     final now = DateTime.now().millisecondsSinceEpoch;
 
-    final items = <MetricDefinition>[
+    final baseDefinitions = <MetricDefinition>[
       MetricDefinition(
-        id: 'metric_sleep_hours',
-        name: 'SUEÑO',
+        id: sleepMetricId,
+        name: 'SLEEP HOURS',
         semanticCategory: 'sleep',
         valueType: 'double',
         unit: 'h',
@@ -96,8 +97,8 @@ class DailyMetricsStore extends ChangeNotifier {
         updatedAt: now,
       ),
       MetricDefinition(
-        id: 'metric_energy',
-        name: 'ENERGÍA',
+        id: energyMetricId,
+        name: 'ENERGY',
         semanticCategory: 'energy',
         valueType: 'int',
         unit: '/10',
@@ -107,13 +108,40 @@ class DailyMetricsStore extends ChangeNotifier {
       ),
     ];
 
-    for (final item in items) {
-      _definitions.add(item);
-      await _definitionsDb.insertOrReplace(item, dirty: true);
+    var changed = false;
+
+    for (final baseDefinition in baseDefinitions) {
+      final index = _definitions.indexWhere(
+        (item) => item.id == baseDefinition.id,
+      );
+
+      if (index == -1) {
+        _definitions.add(baseDefinition);
+        await _definitionsDb.insertOrReplace(baseDefinition, dirty: true);
+        changed = true;
+        continue;
+      }
+
+      final current = _definitions[index];
+
+      if (current.deleted ||
+          current.name != baseDefinition.name ||
+          current.semanticCategory != baseDefinition.semanticCategory ||
+          current.valueType != baseDefinition.valueType ||
+          current.unit != baseDefinition.unit ||
+          current.interpretation != baseDefinition.interpretation) {
+        _definitions[index] = baseDefinition;
+        await _definitionsDb.insertOrReplace(baseDefinition, dirty: true);
+        changed = true;
+      }
     }
 
-    notifyListeners();
-    unawaited(trySyncPending());
+    _definitions.sort((a, b) => a.position.compareTo(b.position));
+
+    if (changed) {
+      notifyListeners();
+      unawaited(trySyncPending());
+    }
   }
 
   /// Carga todos los registros de un día concreto desde SQLite.
@@ -288,6 +316,8 @@ class DailyMetricsStore extends ChangeNotifier {
       _definitions
         ..clear()
         ..addAll(definitions);
+
+      await _ensureBaseDefinitions();
 
       notifyListeners();
     } on FirebaseException catch (e) {

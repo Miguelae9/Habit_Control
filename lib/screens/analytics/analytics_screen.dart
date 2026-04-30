@@ -7,6 +7,7 @@ import 'widgets/weekly_bar_chart.dart';
 import 'package:provider/provider.dart';
 import 'package:habit_control/shared/state/habit_day_store.dart';
 import 'package:habit_control/shared/utils/day_key.dart';
+import 'package:habit_control/shared/state/habit_catalog_store.dart';
 
 import 'package:habit_control/shared/services/stoic_quote_service.dart';
 
@@ -24,8 +25,6 @@ class AnalyticsScreen extends StatefulWidget {
 }
 
 class _AnalyticsScreenState extends State<AnalyticsScreen> {
-  static const int _totalHabits = 6;
-
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   String _quoteText = '';
@@ -107,39 +106,62 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     _loadStoicQuote();
   }
 
-  List<int> _computeDoneCounts(HabitDayStore store, List<String> keys) {
+  List<int> _computeDoneCounts({
+    required HabitDayStore store,
+    required List<String> keys,
+    required Set<String> activeHabitIds,
+  }) {
     final List<int> counts = <int>[];
-    for (int i = 0; i < keys.length; i++) {
-      final String dayKey = keys[i];
-      final int done = store.doneForDay(dayKey).length;
-      counts.add(done);
+
+    for (final String dayKey in keys) {
+      final Set<String> doneIds = store.doneForDay(dayKey);
+
+      final int activeDoneCount = doneIds.where(activeHabitIds.contains).length;
+
+      counts.add(activeDoneCount);
     }
+
     return counts;
   }
 
-  List<double> _computeWeeklyData(List<int> doneCounts) {
+  List<double> _computeWeeklyData({
+    required List<int> doneCounts,
+    required int totalHabits,
+  }) {
     final List<double> data = <double>[];
-    for (int i = 0; i < doneCounts.length; i++) {
-      final int c = doneCounts[i];
 
-      double ratio = 0.0;
-      if (_totalHabits != 0) {
-        ratio = c / _totalHabits;
+    for (final int doneCount in doneCounts) {
+      if (totalHabits == 0) {
+        data.add(0);
+        continue;
       }
-      data.add(ratio);
+
+      data.add(doneCount / totalHabits);
     }
+
     return data;
   }
 
-  int _computeConsistencyPct(List<double> weeklyData) {
+  int _computeConsistencyPct({
+    required List<String> keys,
+    required List<double> weeklyData,
+  }) {
     if (weeklyData.isEmpty) return 0;
 
+    final String todayKey = dayKeyFromDate(DateTime.now());
+    final int todayIndex = keys.indexOf(todayKey);
+
+    if (todayIndex == -1) return 0;
+
     double sum = 0.0;
-    for (int i = 0; i < weeklyData.length; i++) {
+
+    for (int i = 0; i <= todayIndex; i++) {
       sum += weeklyData[i];
     }
 
-    final double avg = sum / weeklyData.length;
+    final int elapsedDays = todayIndex + 1;
+    final double avg = sum / elapsedDays;
+
     return (avg * 100).round();
   }
 
@@ -219,11 +241,32 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     final List<String> days = <String>['L', 'M', 'X', 'J', 'V', 'S', 'D'];
 
     final HabitDayStore store = context.watch<HabitDayStore>();
+    final HabitCatalogStore catalogStore = context.watch<HabitCatalogStore>();
+
     final List<String> keys = _weekKeys(DateTime.now());
 
-    final List<int> doneCounts = _computeDoneCounts(store, keys);
-    final List<double> weeklyData = _computeWeeklyData(doneCounts);
-    final int consistencyPct = _computeConsistencyPct(weeklyData);
+    final Set<String> activeHabitIds = catalogStore.habits
+        .map((habit) => habit.id)
+        .toSet();
+
+    final int totalHabits = activeHabitIds.length;
+
+    final List<int> doneCounts = _computeDoneCounts(
+      store: store,
+      keys: keys,
+      activeHabitIds: activeHabitIds,
+    );
+
+    final List<double> weeklyData = _computeWeeklyData(
+      doneCounts: doneCounts,
+      totalHabits: totalHabits,
+    );
+
+    final int consistencyPct = _computeConsistencyPct(
+      keys: keys,
+      weeklyData: weeklyData,
+    );
+
     final int streak = _computeStreak(keys, doneCounts);
 
     return Scaffold(

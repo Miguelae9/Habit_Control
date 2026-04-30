@@ -4,6 +4,7 @@ import 'package:percent_indicator/percent_indicator.dart';
 import 'package:provider/provider.dart';
 
 import 'package:habit_control/screens/habits/models/habit.dart';
+import 'package:habit_control/screens/habits/models/habit_category.dart';
 import 'package:habit_control/screens/habits/widgets/habit_tile.dart';
 import 'package:habit_control/shared/state/habit_catalog_store.dart';
 import 'package:habit_control/shared/state/habit_day_store.dart';
@@ -44,66 +45,32 @@ class _HabitsScreenState extends State<HabitsScreen> {
   }
 
   Future<void> _showHabitDialog({Habit? habit}) async {
-    final titleCtrl = TextEditingController(text: habit?.title ?? '');
-    final streakCtrl = TextEditingController(text: habit?.streakText ?? '');
-
     final HabitCatalogStore store = context.read<HabitCatalogStore>();
 
-    await showDialog<void>(
+    final HabitDialogResult? result = await showDialog<HabitDialogResult>(
       context: context,
       builder: (dialogContext) {
-        return AlertDialog(
-          title: Text(habit == null ? 'Crear hábito' : 'Editar hábito'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: titleCtrl,
-                decoration: const InputDecoration(
-                  labelText: 'Nombre',
-                  hintText: 'Ej: Leer',
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: streakCtrl,
-                decoration: const InputDecoration(
-                  labelText: 'Texto secundario',
-                  hintText: 'Ej: STREAK: 0 DAYS',
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text('Cancelar'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                final String title = titleCtrl.text.trim();
-                final String streak = streakCtrl.text.trim();
-
-                if (title.isEmpty) return;
-
-                Navigator.of(dialogContext).pop();
-
-                if (habit == null) {
-                  store.addHabit(title: title, streakText: streak);
-                } else {
-                  store.updateHabit(
-                    original: habit,
-                    title: title,
-                    streakText: streak,
-                  );
-                }
-              },
-              child: const Text('Guardar'),
-            ),
-          ],
-        );
+        return _HabitDialog(habit: habit);
       },
     );
+
+    if (result == null) return;
+    if (!mounted) return;
+
+    if (habit == null) {
+      await store.addHabit(
+        title: result.title,
+        category: result.category,
+        streakText: result.streakText,
+      );
+    } else {
+      await store.updateHabit(
+        original: habit,
+        title: result.title,
+        category: result.category,
+        streakText: result.streakText,
+      );
+    }
   }
 
   Future<void> _deleteHabit(Habit habit) async {
@@ -263,4 +230,116 @@ class _HabitsScreenState extends State<HabitsScreen> {
       ),
     );
   }
+}
+
+class _HabitDialog extends StatefulWidget {
+  const _HabitDialog({required this.habit});
+
+  final Habit? habit;
+
+  @override
+  State<_HabitDialog> createState() => _HabitDialogState();
+}
+
+class _HabitDialogState extends State<_HabitDialog> {
+  late final TextEditingController _titleCtrl;
+  late final TextEditingController _streakCtrl;
+  late String _selectedCategory;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _titleCtrl = TextEditingController(text: widget.habit?.title ?? '');
+    _streakCtrl = TextEditingController(text: widget.habit?.streakText ?? '');
+    _selectedCategory = widget.habit?.category ?? HabitCategory.custom;
+  }
+
+  @override
+  void dispose() {
+    _titleCtrl.dispose();
+    _streakCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text(widget.habit == null ? 'Create habit' : 'Edit habit'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(
+            controller: _titleCtrl,
+            decoration: const InputDecoration(
+              labelText: 'Name',
+              hintText: 'Example: Read',
+            ),
+          ),
+          const SizedBox(height: 12),
+          DropdownButtonFormField<String>(
+            initialValue: _selectedCategory,
+            decoration: const InputDecoration(labelText: 'Category'),
+            items: HabitCategory.values.map((category) {
+              return DropdownMenuItem<String>(
+                value: category,
+                child: Text(HabitCategory.labelOf(category)),
+              );
+            }).toList(),
+            onChanged: (value) {
+              if (value == null) return;
+
+              setState(() {
+                _selectedCategory = value;
+              });
+            },
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _streakCtrl,
+            decoration: const InputDecoration(
+              labelText: 'Secondary text',
+              hintText: 'Example: STREAK: 0 DAYS',
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+          child: const Text('Cancel'),
+        ),
+        ElevatedButton(onPressed: _save, child: const Text('Save')),
+      ],
+    );
+  }
+
+  void _save() {
+    final title = _titleCtrl.text.trim();
+    final streak = _streakCtrl.text.trim();
+
+    if (title.isEmpty) return;
+
+    Navigator.of(context).pop(
+      HabitDialogResult(
+        title: title,
+        streakText: streak,
+        category: _selectedCategory,
+      ),
+    );
+  }
+}
+
+class HabitDialogResult {
+  const HabitDialogResult({
+    required this.title,
+    required this.streakText,
+    required this.category,
+  });
+
+  final String title;
+  final String streakText;
+  final String category;
 }

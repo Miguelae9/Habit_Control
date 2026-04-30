@@ -37,7 +37,8 @@ class _InputLogScreenState extends State<InputLogScreen> {
   Future<void> _loadScreenData() async {
     final store = context.read<DailyMetricsStore>();
 
-    await store.loadEntriesForDay(_dayKey);
+    await store.loadLocal();
+    await store.trySyncPending();
     await store.syncDefinitionsFromCloud();
     await store.syncDayFromCloud(_dayKey);
     await store.loadEntriesForDay(_dayKey);

@@ -40,6 +40,7 @@ class HabitCatalogStore extends ChangeNotifier {
 
   Future<void> addHabit({
     required String title,
+    required String category,
     required String streakText,
   }) async {
     final now = DateTime.now().millisecondsSinceEpoch;
@@ -48,6 +49,7 @@ class HabitCatalogStore extends ChangeNotifier {
     final habit = Habit(
       id: id,
       title: title.trim().toUpperCase(),
+      category: category.trim(),
       streakText: streakText.trim().isEmpty
           ? 'STREAK: 0 DAYS'
           : streakText.trim().toUpperCase(),
@@ -65,6 +67,7 @@ class HabitCatalogStore extends ChangeNotifier {
   Future<void> updateHabit({
     required Habit original,
     required String title,
+    required String category,
     required String streakText,
   }) async {
     final index = _habits.indexWhere((h) => h.id == original.id);
@@ -72,6 +75,7 @@ class HabitCatalogStore extends ChangeNotifier {
 
     final updated = original.copyWith(
       title: title.trim().toUpperCase(),
+      category: category.trim(),
       streakText: streakText.trim().isEmpty
           ? original.streakText
           : streakText.trim().toUpperCase(),
@@ -124,6 +128,7 @@ class HabitCatalogStore extends ChangeNotifier {
         return Habit(
           id: doc.id,
           title: (data['title'] as String?) ?? '',
+          category: (data['category'] as String?) ?? '',
           streakText: (data['streakText'] as String?) ?? 'STREAK: 0 DAYS',
           position: (data['position'] as num?)?.toInt() ?? 0,
           updatedAt: (data['updatedAtMs'] as num?)?.toInt() ?? 0,
@@ -166,6 +171,7 @@ class HabitCatalogStore extends ChangeNotifier {
         } else {
           await ref.set({
             'title': habit.title,
+            'category': habit.category,
             'streakText': habit.streakText,
             'position': habit.position,
             'updatedAtMs': habit.updatedAt,

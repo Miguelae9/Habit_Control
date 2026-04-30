@@ -12,7 +12,7 @@ import 'widgets/auth_text_field.dart';
 /// Visible behavior:
 /// - Converts the entered identifier into an email via [_toEmail]
 /// - Calls [FirebaseAuth.signInWithEmailAndPassword]
-/// - On success, navigates to [AppRoutes.dashboard]
+/// - On success, navigates to [AppRoutes.splash] via [Navigator.pushReplacementNamed]
 /// - On [FirebaseAuthException], shows a [SnackBar]
 class LoginScreen extends StatefulWidget {
   /// Creates the login screen.
@@ -62,7 +62,7 @@ class _LoginScreenState extends State<LoginScreen> {
       );
 
       if (!mounted) return;
-      Navigator.pushReplacementNamed(context, AppRoutes.dashboard);
+      Navigator.pushReplacementNamed(context, AppRoutes.splash);
     } on FirebaseAuthException {
       if (!mounted) return;
       ScaffoldMessenger.of(
@@ -171,7 +171,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: 20),
 
                 Text(
-                  'v0.1.0 [MVP_BUILD]',
+                  'v1.4.0 [MVP_BUILD]',
                   textAlign: TextAlign.center,
                   style: theme.textTheme.bodySmall?.copyWith(
                     fontSize: 10,
