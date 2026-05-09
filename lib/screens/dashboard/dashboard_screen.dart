@@ -143,6 +143,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
 
     if (!hasUnit) return textValue;
-    return '$textValue ${unit!.trim()}';
+    return '$textValue ${unit.trim()}';
   }
 }

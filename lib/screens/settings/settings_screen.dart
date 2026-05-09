@@ -1,6 +1,10 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import 'package:habit_control/shared/state/habit_catalog_store.dart';
+import 'package:habit_control/shared/state/habit_day_store.dart';
+import 'package:habit_control/shared/state/daily_metrics_store.dart';
 import 'package:habit_control/router/app_routes.dart';
 import 'package:habit_control/shared/widgets/lateral_menu/lateral_menu.dart';
 
@@ -31,12 +35,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _signOut() async {
+    final habitCatalogStore = context.read<HabitCatalogStore>();
+    final habitDayStore = context.read<HabitDayStore>();
+    final dailyMetricsStore = context.read<DailyMetricsStore>();
+    final navigator = Navigator.of(context);
+
+    await habitCatalogStore.clearAll();
+    await habitDayStore.clearAll();
+    await dailyMetricsStore.clearAll();
+
     await FirebaseAuth.instance.signOut();
 
     if (!mounted) return;
 
-    Navigator.pushNamedAndRemoveUntil(
-      context,
+    navigator.pushNamedAndRemoveUntil(
       AppRoutes.home,
       (Route<dynamic> route) => false,
     );

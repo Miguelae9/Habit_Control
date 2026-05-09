@@ -41,7 +41,7 @@ class _SplashScreenState extends State<SplashScreen> {
     if (user != null) {
       final today = DateTime.now();
       final todayKey = dayKeyFromDate(today);
-      final weekKeys = _weekKeys(today);
+      final monthKeys = _monthKeys(today);
 
       await catalogStore.loadLocal();
       await habitStore.loadLocal();
@@ -51,13 +51,15 @@ class _SplashScreenState extends State<SplashScreen> {
       await catalogStore.syncFromCloud();
 
       await habitStore.trySyncPending();
-      for (final key in weekKeys) {
+      await metricsStore.trySyncPending();
+
+      await metricsStore.syncDefinitionsFromCloud();
+
+      for (final key in monthKeys) {
         await habitStore.syncDayFromCloud(key);
+        await metricsStore.syncDayFromCloud(key);
       }
 
-      await metricsStore.trySyncPending();
-      await metricsStore.syncDefinitionsFromCloud();
-      await metricsStore.syncDayFromCloud(todayKey);
       await metricsStore.loadEntriesForDay(todayKey);
     }
 
@@ -67,23 +69,50 @@ class _SplashScreenState extends State<SplashScreen> {
     Navigator.pushReplacementNamed(context, nextRoute);
   }
 
+  DateTime _startOfMonth(DateTime date) {
+    return DateTime(date.year, date.month, 1);
+  }
+
+  DateTime _endOfMonth(DateTime date) {
+    return DateTime(date.year, date.month + 1, 0);
+  }
+
+  List<String> _dayKeysBetween(DateTime start, DateTime end) {
+    final normalizedStart = DateTime(start.year, start.month, start.day);
+    final normalizedEnd = DateTime(end.year, end.month, end.day);
+
+    final keys = <String>[];
+    DateTime current = normalizedStart;
+
+    while (!current.isAfter(normalizedEnd)) {
+      keys.add(dayKeyFromDate(current));
+      current = current.add(const Duration(days: 1));
+    }
+
+    return keys;
+  }
+
+  List<String> _monthKeys(DateTime date) {
+    return _dayKeysBetween(_startOfMonth(date), _endOfMonth(date));
+  }
+
+  // Prepared for future weekly analytics.
+  // Keep this logic if weekly chart filters are added later.
+  /*
   DateTime _startOfWeek(DateTime date) {
     final normalized = DateTime(date.year, date.month, date.day);
     final delta = normalized.weekday - DateTime.monday;
     return normalized.subtract(Duration(days: delta));
   }
 
-  List<String> _weekKeys(DateTime now) {
-    final start = _startOfWeek(now);
-    final keys = <String>[];
-
-    for (int i = 0; i < 7; i++) {
-      final day = start.add(Duration(days: i));
-      keys.add(dayKeyFromDate(day));
-    }
-
-    return keys;
+  DateTime _endOfWeek(DateTime date) {
+    return _startOfWeek(date).add(const Duration(days: 6));
   }
+
+  List<String> _weekKeys(DateTime date) {
+    return _dayKeysBetween(_startOfWeek(date), _endOfWeek(date));
+  }
+  */
 
   @override
   Widget build(BuildContext context) {

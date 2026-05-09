@@ -138,31 +138,31 @@ class _InputLogScreenState extends State<InputLogScreen> {
   }
 
   Future<void> _confirmDeleteMetric(MetricDefinition definition) async {
+    final metricsStore = context.read<DailyMetricsStore>();
+
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) {
         return AlertDialog(
-          title: const Text('Eliminar métrica'),
-          content: Text('¿Quieres eliminar "${definition.name}"?'),
-          actions: <Widget>[
+          title: const Text('Delete metric'),
+          content: Text('Delete "${definition.name}"?'),
+          actions: [
             TextButton(
               onPressed: () => Navigator.of(ctx).pop(false),
-              child: const Text('Cancelar'),
+              child: const Text('Cancel'),
             ),
-            ElevatedButton(
+            TextButton(
               onPressed: () => Navigator.of(ctx).pop(true),
-              child: const Text('Eliminar'),
+              child: const Text('Delete'),
             ),
           ],
         );
       },
     );
 
-    if (confirmed != true) return;
+    if (!mounted || confirmed != true) return;
 
-    await context.read<DailyMetricsStore>().deleteMetricDefinition(
-      definition.id,
-    );
+    await metricsStore.deleteMetricDefinition(definition.id);
 
     if (!mounted) return;
     setState(() {});
