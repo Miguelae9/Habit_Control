@@ -4,11 +4,11 @@ import 'package:provider/provider.dart';
 import 'package:habit_control/shared/widgets/lateral_menu/lateral_menu.dart';
 import 'package:habit_control/shared/widgets/online_badge.dart';
 import 'package:habit_control/shared/state/daily_metrics_store.dart';
-import 'package:habit_control/shared/utils/day_key.dart';
 import 'package:habit_control/screens/input_log/models/metric_definition.dart';
 import 'package:habit_control/screens/input_log/widgets/metric_row.dart';
 import 'package:habit_control/screens/input_log/widgets/create_metric_dialog.dart';
 import 'package:habit_control/screens/input_log/widgets/edit_metric_dialog.dart';
+import 'package:habit_control/shared/state/selected_day_store.dart';
 
 /// Pantalla de registro diario de métricas.
 ///
@@ -22,26 +22,36 @@ class InputLogScreen extends StatefulWidget {
 }
 
 class _InputLogScreenState extends State<InputLogScreen> {
-  late final String _dayKey;
+  String? _loadedDayKey;
   bool _loading = true;
 
   @override
   void initState() {
     super.initState();
-    _dayKey = dayKeyFromDate(DateTime.now());
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadScreenData();
     });
   }
 
   Future<void> _loadScreenData() async {
+    final selectedDayStore = context.read<SelectedDayStore>();
     final store = context.read<DailyMetricsStore>();
+
+    final dayKey = selectedDayStore.selectedDayKey;
+
+    if (_loadedDayKey == dayKey && !_loading) return;
+    _loadedDayKey = dayKey;
+
+    setState(() {
+      _loading = true;
+    });
 
     await store.loadLocal();
     await store.trySyncPending();
     await store.syncDefinitionsFromCloud();
-    await store.syncDayFromCloud(_dayKey);
-    await store.loadEntriesForDay(_dayKey);
+    await store.syncDayFromCloud(dayKey);
+    await store.loadEntriesForDay(dayKey);
 
     if (!mounted) return;
 
@@ -95,7 +105,9 @@ class _InputLogScreenState extends State<InputLogScreen> {
   Future<void> _changeValue(MetricDefinition definition, bool increase) async {
     final store = context.read<DailyMetricsStore>();
 
-    final current = store.valueForDay(metricId: definition.id, dayKey: _dayKey);
+    final dayKey = context.read<SelectedDayStore>().selectedDayKey;
+
+    final current = store.valueForDay(metricId: definition.id, dayKey: dayKey);
 
     final step = _stepFor(definition);
     final min = _minFor(definition);
@@ -107,7 +119,7 @@ class _InputLogScreenState extends State<InputLogScreen> {
 
     await store.setMetricValue(
       metricId: definition.id,
-      dayKey: _dayKey,
+      dayKey: dayKey,
       numericValue: next,
     );
 
@@ -185,6 +197,17 @@ class _InputLogScreenState extends State<InputLogScreen> {
 
     final definitions = store.getActiveDefinitions();
 
+    final selectedDayStore = context.watch<SelectedDayStore>();
+    final selectedDayKey = selectedDayStore.selectedDayKey;
+
+    if (_loadedDayKey != selectedDayKey) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _loadScreenData();
+        }
+      });
+    }
+
     return Scaffold(
       floatingActionButton: FloatingActionButton(
         onPressed: _openCreateMetricDialog,
@@ -253,7 +276,7 @@ class _InputLogScreenState extends State<InputLogScreen> {
                   ),
                   const SizedBox(height: 28),
                   Text(
-                    _dayKey,
+                    selectedDayKey,
                     textAlign: TextAlign.center,
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: textMuted,
@@ -288,7 +311,7 @@ class _InputLogScreenState extends State<InputLogScreen> {
 
                       final value = store.valueForDay(
                         metricId: definition.id,
-                        dayKey: _dayKey,
+                        dayKey: selectedDayKey,
                       );
 
                       return Padding(

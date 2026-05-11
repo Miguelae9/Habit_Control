@@ -59,7 +59,7 @@ class CreditsScreen extends StatelessWidget {
               const SizedBox(height: 8),
 
               Text(
-                'BUILD: v1.4.0',
+                'BUILD: v1.6.0',
                 textAlign: TextAlign.center,
                 style: Theme.of(
                   context,

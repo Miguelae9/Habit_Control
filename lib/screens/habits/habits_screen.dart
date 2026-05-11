@@ -8,9 +8,9 @@ import 'package:habit_control/screens/habits/models/habit_category.dart';
 import 'package:habit_control/screens/habits/widgets/habit_tile.dart';
 import 'package:habit_control/shared/state/habit_catalog_store.dart';
 import 'package:habit_control/shared/state/habit_day_store.dart';
-import 'package:habit_control/shared/utils/day_key.dart';
 import 'package:habit_control/shared/widgets/lateral_menu/lateral_menu.dart';
 import 'package:habit_control/shared/widgets/online_badge.dart';
+import 'package:habit_control/shared/state/selected_day_store.dart';
 
 class HabitsScreen extends StatefulWidget {
   const HabitsScreen({super.key});
@@ -21,6 +21,7 @@ class HabitsScreen extends StatefulWidget {
 
 class _HabitsScreenState extends State<HabitsScreen> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  String? _loadedDayKey;
 
   @override
   void initState() {
@@ -28,16 +29,25 @@ class _HabitsScreenState extends State<HabitsScreen> {
     WidgetsBinding.instance.addPostFrameCallback(_afterFirstFrame);
   }
 
-  Future<void> _afterFirstFrame(Duration _) async {
+  Future<void> _loadSelectedDayData() async {
+    final selectedDayStore = context.read<SelectedDayStore>();
     final dayStore = context.read<HabitDayStore>();
     final catalogStore = context.read<HabitCatalogStore>();
-    final today = dayKeyFromDate(DateTime.now());
+
+    final dayKey = selectedDayStore.selectedDayKey;
+
+    if (_loadedDayKey == dayKey) return;
+    _loadedDayKey = dayKey;
 
     await catalogStore.trySyncPending();
     await catalogStore.syncFromCloud();
 
     await dayStore.trySyncPending();
-    await dayStore.syncDayFromCloud(today);
+    await dayStore.syncDayFromCloud(dayKey);
+  }
+
+  Future<void> _afterFirstFrame(Duration _) async {
+    await _loadSelectedDayData();
   }
 
   void _openDrawer() {
@@ -100,10 +110,10 @@ class _HabitsScreenState extends State<HabitsScreen> {
   }
 
   List<Widget> _buildHabitTiles({
-    required String todayKey,
-    required List<Habit> habits,
-  }) {
-    final doneIds = context.watch<HabitDayStore>().doneForDay(todayKey);
+  required String dayKey,
+  required List<Habit> habits,
+}) {
+    final doneIds = context.watch<HabitDayStore>().doneForDay(dayKey);
 
     return habits.map((habit) {
       final isActive = doneIds.contains(habit.id);
@@ -115,7 +125,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
         accent: isActive ? const Color(0xFF6CFAFF) : const Color(0xFF93A3B8),
         onTap: () {
           context.read<HabitDayStore>().toggleHabitForDay(
-            dayKey: todayKey,
+            dayKey: dayKey,
             habitId: habit.id,
           );
         },
@@ -137,8 +147,18 @@ class _HabitsScreenState extends State<HabitsScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final habits = context.watch<HabitCatalogStore>().habits;
-    final todayKey = dayKeyFromDate(DateTime.now());
-    final doneIds = context.watch<HabitDayStore>().doneForDay(todayKey);
+    final selectedDayStore = context.watch<SelectedDayStore>();
+    final selectedDayKey = selectedDayStore.selectedDayKey;
+
+    if (_loadedDayKey != selectedDayKey) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _loadSelectedDayData();
+        }
+      });
+    }
+
+    final doneIds = context.watch<HabitDayStore>().doneForDay(selectedDayKey);
 
     final habitIds = habits.map((habit) => habit.id).toSet();
     final completedToday = doneIds.where(habitIds.contains).length;
@@ -219,7 +239,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
                 const SizedBox(height: 30),
                 Column(
                   children: _buildHabitTiles(
-                    todayKey: todayKey,
+                    dayKey: selectedDayKey,
                     habits: habits,
                   ),
                 ),

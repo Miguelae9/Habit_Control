@@ -4,6 +4,7 @@ import 'package:habit_control/screens/dashboard/widgets/dashboard_header.dart';
 import 'package:habit_control/screens/dashboard/widgets/insight_card.dart';
 import 'package:habit_control/screens/dashboard/widgets/metrics_summary_card.dart';
 import 'package:habit_control/screens/dashboard/widgets/weather_card.dart';
+import 'package:habit_control/screens/dashboard/widgets/dashboard_date_selector_card.dart';
 import 'package:habit_control/shared/state/weather_store.dart';
 import 'package:habit_control/shared/state/daily_metrics_store.dart';
 import 'package:habit_control/shared/state/habit_catalog_store.dart';
@@ -11,6 +12,7 @@ import 'package:habit_control/shared/state/habit_day_store.dart';
 import 'package:habit_control/shared/utils/day_key.dart';
 import 'package:habit_control/screens/dashboard/services/daily_insight_service.dart';
 import 'package:habit_control/shared/widgets/lateral_menu/lateral_menu.dart';
+import 'package:habit_control/shared/state/selected_day_store.dart';
 import 'package:provider/provider.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -21,21 +23,33 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-  late final String _todayKey;
-
   @override
   void initState() {
     super.initState();
-    _todayKey = dayKeyFromDate(DateTime.now());
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      final metricsStore = context.read<DailyMetricsStore>();
-      await metricsStore.loadEntriesForDay(_todayKey);
+      await _loadSelectedDayData();
     });
+  }
+
+  Future<void> _loadSelectedDayData() async {
+    final selectedDayStore = context.read<SelectedDayStore>();
+    final metricsStore = context.read<DailyMetricsStore>();
+    final habitDayStore = context.read<HabitDayStore>();
+
+    final dayKey = selectedDayStore.selectedDayKey;
+
+    await metricsStore.loadEntriesForDay(dayKey);
+    await metricsStore.syncDayFromCloud(dayKey);
+    await habitDayStore.syncDayFromCloud(dayKey);
   }
 
   @override
   Widget build(BuildContext context) {
+    final selectedDayStore = context.watch<SelectedDayStore>();
+    final selectedDay = selectedDayStore.selectedDay;
+    final selectedDayKey = selectedDayStore.selectedDayKey;
+
     final habitDayStore = context.watch<HabitDayStore>();
     final metricsStore = context.watch<DailyMetricsStore>();
     final weatherStore = context.watch<WeatherStore>();
@@ -44,7 +58,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final habitCatalogStore = context.watch<HabitCatalogStore>();
     final activeHabits = habitCatalogStore.habits;
 
-    final doneToday = habitDayStore.doneForDay(_todayKey);
+    final doneToday = habitDayStore.doneForDay(selectedDayKey);
     final completedHabits = activeHabits
         .where((habit) => doneToday.contains(habit.id))
         .length;
@@ -55,7 +69,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final metrics = activeDefinitions.take(3).map((definition) {
       final rawValue = metricsStore.valueForDay(
         metricId: definition.id,
-        dayKey: _todayKey,
+        dayKey: selectedDayKey,
       );
 
       final formattedValue = _formatMetricValue(
@@ -70,7 +84,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final insightMetrics = activeDefinitions.map((definition) {
       final value = metricsStore.valueForDay(
         metricId: definition.id,
-        dayKey: _todayKey,
+        dayKey: selectedDayKey,
       );
 
       return InsightMetric(
@@ -103,6 +117,26 @@ class _DashboardScreenState extends State<DashboardScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const DashboardHeader(),
+
+                const SizedBox(height: 16),
+
+                DashboardDateSelectorCard(
+                  selectedDay: selectedDay,
+                  isToday: selectedDayStore.isToday,
+                  canGoNextDay: selectedDayStore.canGoNextDay,
+                  onPreviousDay: () async {
+                    selectedDayStore.goPreviousDay();
+                    await _loadSelectedDayData();
+                  },
+                  onNextDay: () async {
+                    selectedDayStore.goNextDay();
+                    await _loadSelectedDayData();
+                  },
+                  onToday: () async {
+                    selectedDayStore.resetToToday();
+                    await _loadSelectedDayData();
+                  },
+                ),
                 const SizedBox(height: 16),
                 WeatherCard(
                   weather: weatherStore.weather,

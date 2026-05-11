@@ -171,7 +171,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: 20),
 
                 Text(
-                  'v1.4.0 [MVP_BUILD]',
+                  'v1.6.0 [MVP_BUILD]',
                   textAlign: TextAlign.center,
                   style: theme.textTheme.bodySmall?.copyWith(
                     fontSize: 10,

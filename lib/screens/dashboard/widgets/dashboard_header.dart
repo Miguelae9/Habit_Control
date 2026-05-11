@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+
+import 'package:habit_control/shared/widgets/online_badge.dart';
 
 class DashboardHeader extends StatelessWidget {
   const DashboardHeader({super.key});
@@ -11,13 +12,9 @@ class DashboardHeader extends StatelessWidget {
     return 'Good evening';
   }
 
-  String _getTodayText() {
-    final now = DateTime.now();
-    return DateFormat('EEEE, MMM d', 'en_US').format(now);
-  }
-
   @override
   Widget build(BuildContext context) {
+    final Color iconColor = Theme.of(context).iconTheme.color ?? Colors.white;
     final theme = Theme.of(context);
 
     return Row(
@@ -25,22 +22,19 @@ class DashboardHeader extends StatelessWidget {
         Builder(
           builder: (context) {
             return IconButton(
+              icon: Icon(Icons.menu, color: iconColor),
               onPressed: () => Scaffold.of(context).openDrawer(),
-              icon: const Icon(Icons.menu),
             );
           },
         ),
+
         const SizedBox(width: 8),
+
         Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(_getGreeting(), style: theme.textTheme.titleMedium),
-              const SizedBox(height: 4),
-              Text(_getTodayText(), style: theme.textTheme.bodyMedium),
-            ],
-          ),
+          child: Text(_getGreeting(), style: theme.textTheme.titleMedium),
         ),
+
+        OnlineBadge(textColor: iconColor),
       ],
     );
   }
