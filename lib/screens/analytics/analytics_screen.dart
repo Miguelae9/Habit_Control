@@ -6,8 +6,10 @@ import 'widgets/weekly_bar_chart.dart';
 
 import 'package:provider/provider.dart';
 import 'package:habit_control/shared/state/habit_day_store.dart';
+import 'package:habit_control/shared/state/daily_metrics_store.dart';
 import 'package:habit_control/shared/utils/day_key.dart';
 import 'package:habit_control/shared/state/habit_catalog_store.dart';
+import 'package:habit_control/screens/input_log/models/metric_definition.dart';
 
 import 'package:habit_control/shared/services/stoic_quote_service.dart';
 
@@ -38,29 +40,74 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     return date.subtract(Duration(days: delta));
   }
 
-  List<String> _weekKeys(DateTime now) {
-    final DateTime start = _startOfWeek(now);
+  DateTime _startOfMonth(DateTime d) {
+    return DateTime(d.year, d.month, 1);
+  }
 
-    final List<String> keys = <String>[];
-    for (int i = 0; i < 7; i++) {
-      final DateTime day = start.add(Duration(days: i));
-      keys.add(dayKeyFromDate(day));
+  List<String> _dayKeysBetween(DateTime start, DateTime end) {
+    final normalizedStart = DateTime(start.year, start.month, start.day);
+    final normalizedEnd = DateTime(end.year, end.month, end.day);
+
+    final keys = <String>[];
+    DateTime current = normalizedStart;
+
+    while (!current.isAfter(normalizedEnd)) {
+      keys.add(dayKeyFromDate(current));
+      current = current.add(const Duration(days: 1));
     }
+
     return keys;
   }
 
-  Future<void> _syncWeekIfPossible() async {
-    final HabitDayStore store = context.read<HabitDayStore>();
-    await store.trySyncPending();
+  List<String> _weekKeys(DateTime now) {
+    final DateTime start = _startOfWeek(now);
+    return _dayKeysBetween(start, start.add(const Duration(days: 6)));
+  }
 
-    final List<String> keys = _weekKeys(DateTime.now());
-    for (final String k in keys) {
-      await store.syncDayFromCloud(k);
+  List<String> _weekToDateKeys(DateTime now) {
+    return _dayKeysBetween(_startOfWeek(now), now);
+  }
+
+  List<String> _previousWeekKeys(DateTime now) {
+    final DateTime start = _startOfWeek(now).subtract(const Duration(days: 7));
+    return _dayKeysBetween(start, start.add(const Duration(days: 6)));
+  }
+
+  List<String> _monthToDateKeys(DateTime now) {
+    return _dayKeysBetween(_startOfMonth(now), now);
+  }
+
+  List<String> _dayNumberLabels(List<String> keys) {
+    return keys.map((key) {
+      final day = int.tryParse(key.substring(8, 10)) ?? 0;
+      return day.toString();
+    }).toList();
+  }
+
+  Future<void> _syncAnalyticsRangeIfPossible() async {
+    final HabitDayStore habitStore = context.read<HabitDayStore>();
+    final DailyMetricsStore metricsStore = context.read<DailyMetricsStore>();
+
+    await habitStore.trySyncPending();
+    await metricsStore.trySyncPending();
+
+    final now = DateTime.now();
+
+    final keys = <String>{
+      ..._monthToDateKeys(now),
+      ..._weekKeys(now),
+      ..._previousWeekKeys(now),
+    };
+
+    for (final key in keys) {
+      await habitStore.syncDayFromCloud(key);
+      await metricsStore.syncDayFromCloud(key);
+      await metricsStore.loadEntriesForDay(key);
     }
   }
 
   void _afterFirstFrame(Duration _) {
-    _syncWeekIfPossible();
+    _syncAnalyticsRangeIfPossible();
   }
 
   void _openDrawer() {
@@ -111,61 +158,48 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     required List<String> keys,
     required Set<String> activeHabitIds,
   }) {
-    final List<int> counts = <int>[];
+    final counts = <int>[];
 
-    for (final String dayKey in keys) {
-      final Set<String> doneIds = store.doneForDay(dayKey);
-
-      final int activeDoneCount = doneIds.where(activeHabitIds.contains).length;
-
+    for (final dayKey in keys) {
+      final doneIds = store.doneForDay(dayKey);
+      final activeDoneCount = doneIds.where(activeHabitIds.contains).length;
       counts.add(activeDoneCount);
     }
 
     return counts;
   }
 
-  List<double> _computeWeeklyData({
-    required List<int> doneCounts,
-    required int totalHabits,
-  }) {
-    final List<double> data = <double>[];
-
-    for (final int doneCount in doneCounts) {
-      if (totalHabits == 0) {
-        data.add(0);
-        continue;
-      }
-
-      data.add(doneCount / totalHabits);
-    }
-
-    return data;
-  }
-
-  int _computeConsistencyPct({
+  List<double> _computeCompletionData({
+    required HabitDayStore store,
     required List<String> keys,
-    required List<double> weeklyData,
+    required Set<String> activeHabitIds,
   }) {
-    if (weeklyData.isEmpty) return 0;
+    final totalHabits = activeHabitIds.length;
 
-    final String todayKey = dayKeyFromDate(DateTime.now());
-    final int todayIndex = keys.indexOf(todayKey);
-
-    if (todayIndex == -1) return 0;
-
-    double sum = 0.0;
-
-    for (int i = 0; i <= todayIndex; i++) {
-      sum += weeklyData[i];
+    if (totalHabits == 0) {
+      return List<double>.filled(keys.length, 0);
     }
 
-    final int elapsedDays = todayIndex + 1;
-    final double avg = sum / elapsedDays;
+    final doneCounts = _computeDoneCounts(
+      store: store,
+      keys: keys,
+      activeHabitIds: activeHabitIds,
+    );
 
-    return (avg * 100).round();
+    return doneCounts.map((count) => count / totalHabits).toList();
   }
 
-  int _computeStreak(List<String> keys, List<int> doneCounts) {
+  int _averagePct(List<double> data) {
+    if (data.isEmpty) return 0;
+
+    final sum = data.fold<double>(0, (total, value) => total + value);
+    return ((sum / data.length) * 100).round();
+  }
+
+  int _computeStreak({
+    required List<String> keys,
+    required List<int> doneCounts,
+  }) {
     int streak = 0;
 
     final String todayKey = dayKeyFromDate(DateTime.now());
@@ -184,10 +218,152 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     return streak;
   }
 
+  String _bestDayLabel({
+    required List<String> keys,
+    required List<double> data,
+  }) {
+    if (keys.isEmpty || data.isEmpty) return '--';
+
+    int bestIndex = 0;
+
+    for (int i = 1; i < data.length; i++) {
+      if (data[i] > data[bestIndex]) {
+        bestIndex = i;
+      }
+    }
+
+    final pct = (data[bestIndex] * 100).round();
+    final day = int.tryParse(keys[bestIndex].substring(8, 10)) ?? 0;
+
+    return 'Day $day · $pct%';
+  }
+
+  String _comparisonLabel({
+    required List<double> current,
+    required List<double> previous,
+  }) {
+    final currentPct = _averagePct(current);
+    final previousPct = _averagePct(previous);
+    final diff = currentPct - previousPct;
+
+    if (diff > 0) return '+$diff%';
+    return '$diff%';
+  }
+
+  MetricDefinition? _findMetricByCategory({
+    required List<MetricDefinition> definitions,
+    required String category,
+  }) {
+    for (final definition in definitions) {
+      if (definition.semanticCategory == category) {
+        return definition;
+      }
+    }
+
+    return null;
+  }
+
+  double? _averageMetricValue({
+    required DailyMetricsStore store,
+    required MetricDefinition? definition,
+    required List<String> keys,
+  }) {
+    if (definition == null) return null;
+
+    final values = <double>[];
+
+    for (final key in keys) {
+      final value = store.valueForDay(metricId: definition.id, dayKey: key);
+
+      if (value > 0) {
+        values.add(value);
+      }
+    }
+
+    if (values.isEmpty) return null;
+
+    final sum = values.fold<double>(0, (total, value) => total + value);
+    return sum / values.length;
+  }
+
+  String _metricAverageLabel({
+    required DailyMetricsStore store,
+    required MetricDefinition? definition,
+    required List<String> keys,
+  }) {
+    final avg = _averageMetricValue(
+      store: store,
+      definition: definition,
+      keys: keys,
+    );
+
+    if (avg == null || definition == null) return '--';
+
+    final unit = definition.unit ?? '';
+
+    if (definition.valueType == 'int') {
+      return '${avg.round()}$unit';
+    }
+
+    return '${avg.toStringAsFixed(1)}$unit';
+  }
+
+  String _topHabitLabel({
+    required HabitCatalogStore catalogStore,
+    required HabitDayStore store,
+    required List<String> keys,
+  }) {
+    final habits = catalogStore.habits;
+    if (habits.isEmpty) return '--';
+
+    final activeIds = habits.map((habit) => habit.id).toSet();
+    final counts = <String, int>{};
+
+    for (final key in keys) {
+      final doneIds = store.doneForDay(key);
+
+      for (final id in doneIds) {
+        if (!activeIds.contains(id)) continue;
+        counts[id] = (counts[id] ?? 0) + 1;
+      }
+    }
+
+    if (counts.isEmpty) return '--';
+
+    String bestId = counts.keys.first;
+
+    for (final id in counts.keys) {
+      if ((counts[id] ?? 0) > (counts[bestId] ?? 0)) {
+        bestId = id;
+      }
+    }
+
+    for (final habit in habits) {
+      if (habit.id == bestId) {
+        return '${habit.title} (${counts[bestId]})';
+      }
+    }
+
+    return '--';
+  }
+
   Widget _buildMenuButton(Color iconColor) {
     return IconButton(
       icon: Icon(Icons.menu, color: iconColor),
       onPressed: _openDrawer,
+    );
+  }
+
+  Widget _buildSectionTitle(String text, Color color) {
+    return Text(
+      text,
+      textAlign: TextAlign.center,
+      style: TextStyle(
+        fontSize: 12,
+        fontWeight: FontWeight.w700,
+        letterSpacing: 1.8,
+        color: color,
+      ),
     );
   }
 
@@ -211,16 +387,18 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     final ThemeData theme = Theme.of(context);
 
     final Color bg = theme.scaffoldBackgroundColor;
+    const Color cardBg = Color(0xFF0F172A);
 
     final Color textMain =
-        theme.textTheme.bodyLarge?.color ?? theme.colorScheme.onSurface;
+        theme.textTheme.headlineLarge?.color ?? const Color(0xFFF8FAFC);
+
     final Color textMuted =
-        theme.textTheme.bodyMedium?.color ?? theme.colorScheme.onSurface;
+        theme.textTheme.bodyMedium?.color ?? const Color(0xFF94A3B8);
 
-    final Color accent = theme.colorScheme.primary;
+    final Color accent = theme.primaryColor;
 
-    final Color gridColor = textMuted.withValues(alpha: 0.25);
-    final Color borderColor = textMuted.withValues(alpha: 0.35);
+    final Color gridColor = textMuted.withValues(alpha: 0.18);
+    final Color borderColor = accent.withValues(alpha: 0.35);
     final Color axisTextColor = textMuted.withValues(alpha: 0.85);
     final Color authorColor = textMuted.withValues(alpha: 0.75);
 
@@ -238,41 +416,100 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
       color: authorColor,
     );
 
-    final List<String> days = <String>['L', 'M', 'X', 'J', 'V', 'S', 'D'];
+    final List<String> weekLabels = <String>['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
     final HabitDayStore store = context.watch<HabitDayStore>();
     final HabitCatalogStore catalogStore = context.watch<HabitCatalogStore>();
+    final DailyMetricsStore metricsStore = context.watch<DailyMetricsStore>();
 
-    final List<String> keys = _weekKeys(DateTime.now());
+    final now = DateTime.now();
 
-    final Set<String> activeHabitIds = catalogStore.habits
-        .map((habit) => habit.id)
-        .toSet();
+    final weekKeys = _weekKeys(now);
+    final weekToDateKeys = _weekToDateKeys(now);
+    final previousWeekKeys = _previousWeekKeys(now);
+    final monthKeys = _monthToDateKeys(now);
 
-    final int totalHabits = activeHabitIds.length;
+    final monthLabels = _dayNumberLabels(monthKeys);
 
-    final List<int> doneCounts = _computeDoneCounts(
+    final activeHabitIds = catalogStore.habits.map((habit) => habit.id).toSet();
+
+    final weekData = _computeCompletionData(
       store: store,
-      keys: keys,
+      keys: weekKeys,
       activeHabitIds: activeHabitIds,
     );
 
-    final List<double> weeklyData = _computeWeeklyData(
-      doneCounts: doneCounts,
-      totalHabits: totalHabits,
+    final weekToDateData = _computeCompletionData(
+      store: store,
+      keys: weekToDateKeys,
+      activeHabitIds: activeHabitIds,
     );
 
-    final int consistencyPct = _computeConsistencyPct(
-      keys: keys,
-      weeklyData: weeklyData,
+    final previousWeekData = _computeCompletionData(
+      store: store,
+      keys: previousWeekKeys,
+      activeHabitIds: activeHabitIds,
     );
 
-    final int streak = _computeStreak(keys, doneCounts);
+    final monthData = _computeCompletionData(
+      store: store,
+      keys: monthKeys,
+      activeHabitIds: activeHabitIds,
+    );
+
+    final doneCounts = _computeDoneCounts(
+      store: store,
+      keys: weekKeys,
+      activeHabitIds: activeHabitIds,
+    );
+
+    final consistencyPct = _averagePct(weekToDateData);
+    final monthlyPct = _averagePct(monthData);
+
+    final streak = _computeStreak(keys: weekKeys, doneCounts: doneCounts);
+
+    final comparison = _comparisonLabel(
+      current: weekToDateData,
+      previous: previousWeekData,
+    );
+
+    final bestDay = _bestDayLabel(keys: monthKeys, data: monthData);
+
+    final topHabit = _topHabitLabel(
+      catalogStore: catalogStore,
+      store: store,
+      keys: monthKeys,
+    );
+
+    final sleepMetric = _findMetricByCategory(
+      definitions: metricsStore.getActiveDefinitions(),
+      category: 'sleep',
+    );
+
+    final energyMetric = _findMetricByCategory(
+      definitions: metricsStore.getActiveDefinitions(),
+      category: 'energy',
+    );
+
+    final avgSleep = _metricAverageLabel(
+      store: metricsStore,
+      definition: sleepMetric,
+      keys: monthKeys,
+    );
+
+    final avgEnergy = _metricAverageLabel(
+      store: metricsStore,
+      definition: energyMetric,
+      keys: monthKeys,
+    );
 
     return Scaffold(
       key: _scaffoldKey,
       backgroundColor: bg,
-      drawer: const Drawer(child: LateralMenu()),
+      drawer: const Drawer(
+        backgroundColor: Color.fromARGB(34, 0, 70, 221),
+        child: LateralMenu(),
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
@@ -288,7 +525,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                         _buildMenuButton(textMain),
                         const Spacer(),
                         Text(
-                          'WEEKLY PERFORMANCE',
+                          'ANALYTICS',
                           style: TextStyle(
                             fontSize: 11,
                             letterSpacing: 1.8,
@@ -297,12 +534,16 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 30),
+                    const SizedBox(height: 10),
+
+                    _buildSectionTitle('WEEKLY PERFORMANCE', textMain),
+                    const SizedBox(height: 24),
+
                     SizedBox(
-                      height: 320,
+                      height: 300,
                       child: WeeklyBarChart(
-                        data: weeklyData,
-                        days: days,
+                        data: weekData,
+                        labels: weekLabels,
                         accent: accent,
                         gridColor: gridColor,
                         borderColor: borderColor,
@@ -310,20 +551,39 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                         labelTextColor: textMuted,
                       ),
                     ),
+
                     const SizedBox(height: 20),
+
                     Row(
                       children: <Widget>[
                         Expanded(
                           child: StatCard(
                             title: 'CONSISTENCY',
                             value: '$consistencyPct%',
-                            showUpArrow: true,
+                            showUpArrow: consistencyPct > 0,
                             textMain: textMain,
                             borderColor: borderColor,
-                            bg: bg,
+                            bg: cardBg,
                           ),
                         ),
                         const SizedBox(width: 10),
+                        Expanded(
+                          child: StatCard(
+                            title: 'VS LAST WEEK',
+                            value: comparison,
+                            showUpArrow: comparison.startsWith('+'),
+                            textMain: textMain,
+                            borderColor: borderColor,
+                            bg: cardBg,
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 10),
+
+                    Row(
+                      children: <Widget>[
                         Expanded(
                           child: StatCard(
                             title: 'CURRENT STREAK',
@@ -331,11 +591,99 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                             showUpArrow: false,
                             textMain: textMain,
                             borderColor: textMuted.withValues(alpha: 0.5),
-                            bg: bg,
+                            bg: cardBg,
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: StatCard(
+                            title: 'BEST DAY',
+                            value: bestDay,
+                            showUpArrow: false,
+                            textMain: textMain,
+                            borderColor: borderColor,
+                            bg: cardBg,
                           ),
                         ),
                       ],
                     ),
+
+                    const SizedBox(height: 28),
+
+                    _buildSectionTitle('MONTHLY OVERVIEW', textMain),
+                    const SizedBox(height: 24),
+
+                    SizedBox(
+                      height: 260,
+                      child: WeeklyBarChart(
+                        data: monthData,
+                        labels: monthLabels,
+                        accent: accent,
+                        gridColor: gridColor,
+                        borderColor: borderColor,
+                        axisTextColor: axisTextColor,
+                        labelTextColor: textMuted,
+                        barWidth: 7,
+                        labelStep: 5,
+                      ),
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    Row(
+                      children: <Widget>[
+                        Expanded(
+                          child: StatCard(
+                            title: 'MONTH AVG',
+                            value: '$monthlyPct%',
+                            showUpArrow: monthlyPct > 0,
+                            textMain: textMain,
+                            borderColor: borderColor,
+                            bg: cardBg,
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: StatCard(
+                            title: 'TOP HABIT',
+                            value: topHabit,
+                            showUpArrow: false,
+                            textMain: textMain,
+                            borderColor: borderColor,
+                            bg: cardBg,
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 10),
+
+                    Row(
+                      children: <Widget>[
+                        Expanded(
+                          child: StatCard(
+                            title: 'AVG SLEEP',
+                            value: avgSleep,
+                            showUpArrow: false,
+                            textMain: textMain,
+                            borderColor: borderColor,
+                            bg: cardBg,
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: StatCard(
+                            title: 'AVG ENERGY',
+                            value: avgEnergy,
+                            showUpArrow: false,
+                            textMain: textMain,
+                            borderColor: borderColor,
+                            bg: cardBg,
+                          ),
+                        ),
+                      ],
+                    ),
+
                     const SizedBox(height: 24),
                     _buildQuoteSection(quoteStyle, authorStyle),
                     const SizedBox(height: 12),

@@ -1,21 +1,13 @@
 import 'package:flutter/material.dart';
 
-/// Small stat card displaying a label, a value, and an optional up-arrow icon.
 class StatCard extends StatelessWidget {
-  /// Label shown at the top of the card.
   final String title;
-
-  /// Main value shown in large text.
   final String value;
-
-  /// Whether to show an up-arrow icon next to [value].
   final bool showUpArrow;
-
   final Color textMain;
   final Color borderColor;
   final Color bg;
 
-  /// Creates a stat card.
   const StatCard({
     super.key,
     required this.title,
@@ -28,50 +20,62 @@ class StatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+    final bool compact = width < 380;
+
     return Container(
-      height: 90,
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+      constraints: const BoxConstraints(minHeight: 92),
+      padding: EdgeInsets.symmetric(
+        horizontal: compact ? 10 : 14,
+        vertical: 14,
+      ),
       decoration: BoxDecoration(
         color: bg,
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(color: borderColor),
-        borderRadius: BorderRadius.circular(2),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
-        children: <Widget>[
+        children: [
           Text(
             title,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: 12,
+              fontSize: compact ? 9 : 10,
               fontWeight: FontWeight.w700,
               letterSpacing: 1.2,
-              color: textMain,
+              color: textMain.withValues(alpha: 0.7),
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 10),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              Text(
-                value,
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 1.0,
+            children: [
+              if (showUpArrow) ...[
+                Icon(
+                  Icons.arrow_upward,
+                  size: compact ? 13 : 15,
                   color: textMain,
                 ),
-              ),
-              if (showUpArrow) const SizedBox(width: 4),
-              if (showUpArrow)
-                const Icon(
-                  Icons.arrow_drop_up,
-                  size: 24,
-                  color: Color(0xFF22C55E),
+                const SizedBox(width: 4),
+              ],
+              Flexible(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    value,
+                    maxLines: 1,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: compact ? 16 : 18,
+                      fontWeight: FontWeight.bold,
+                      color: textMain,
+                    ),
+                  ),
                 ),
+              ),
             ],
           ),
         ],

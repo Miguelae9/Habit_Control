@@ -1,15 +1,13 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
-/// Weekly bar chart rendered with `fl_chart`.
+/// Reusable bar chart for analytics completion data.
 ///
-/// Visible expectations:
-/// - [data] values are plotted on a 0..1 scale (see `minY`/`maxY`)
-/// - Left axis labels display percentages derived from `value * 100`
-/// - Bars use their list index as the X coordinate and [days] for bottom labels
+/// [data] values must be between 0 and 1.
+/// [labels] are shown in the bottom axis.
 class WeeklyBarChart extends StatelessWidget {
   final List<double> data;
-  final List<String> days;
+  final List<String> labels;
 
   final Color accent;
   final Color gridColor;
@@ -17,16 +15,20 @@ class WeeklyBarChart extends StatelessWidget {
   final Color axisTextColor;
   final Color labelTextColor;
 
-  /// Creates a bar chart widget.
+  final double barWidth;
+  final int labelStep;
+
   const WeeklyBarChart({
     super.key,
     required this.data,
-    required this.days,
+    required this.labels,
     required this.accent,
     required this.gridColor,
     required this.borderColor,
     required this.axisTextColor,
     required this.labelTextColor,
+    this.barWidth = 15,
+    this.labelStep = 1,
   });
 
   @override
@@ -59,50 +61,22 @@ class WeeklyBarChart extends StatelessWidget {
               reservedSize: 40,
               interval: 0.25,
               getTitlesWidget: (double value, TitleMeta meta) {
-                if (value == 0 ||
-                    value == 0.25 ||
-                    value == 0.5 ||
-                    value == 0.75 ||
-                    value == 1) {
-                  return SideTitleWidget(
-                    axisSide: meta.axisSide,
-                    space: 8,
-                    child: Text(
-                      '${(value * 100).toInt()}%',
-                      style: TextStyle(
-                        color: axisTextColor,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  );
+                if (value != 0 &&
+                    value != 0.25 &&
+                    value != 0.5 &&
+                    value != 0.75 &&
+                    value != 1) {
+                  return const SizedBox();
                 }
-                return const SizedBox();
-              },
-            ),
-          ),
-          rightTitles: AxisTitles(
-            sideTitles: SideTitles(
-              showTitles: true,
-              reservedSize: 40,
-              interval: 0.5,
-              getTitlesWidget: (double value, TitleMeta meta) {
-                String text = '';
-                if (value == 1) text = 'MAX';
-                if (value == 0.5) text = 'MID';
-                if (value == 0) text = 'MIN';
-
-                if (text.isEmpty) return const SizedBox();
 
                 return SideTitleWidget(
                   axisSide: meta.axisSide,
                   space: 8,
                   child: Text(
-                    text,
+                    '${(value * 100).toInt()}%',
                     style: TextStyle(
-                      color: axisTextColor.withValues(alpha: 0.7),
-                      fontSize: 9,
-                      letterSpacing: 1.5,
+                      color: axisTextColor,
+                      fontSize: 10,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -110,21 +84,33 @@ class WeeklyBarChart extends StatelessWidget {
               },
             ),
           ),
+          rightTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
           bottomTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,
               reservedSize: 42,
               getTitlesWidget: (double value, TitleMeta meta) {
                 final int index = value.toInt();
-                if (index < 0 || index >= days.length) return const SizedBox();
+                if (index < 0 || index >= labels.length) {
+                  return const SizedBox();
+                }
+
+                final bool shouldShowLabel =
+                    index == 0 ||
+                    index == labels.length - 1 ||
+                    index % labelStep == 0;
+
+                if (!shouldShowLabel) return const SizedBox();
 
                 return Column(
                   mainAxisSize: MainAxisSize.min,
                   children: <Widget>[
                     const SizedBox(height: 8),
                     Container(
-                      width: 6,
-                      height: 6,
+                      width: 5,
+                      height: 5,
                       decoration: BoxDecoration(
                         color: accent,
                         shape: BoxShape.circle,
@@ -132,10 +118,10 @@ class WeeklyBarChart extends StatelessWidget {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      days[index],
+                      labels[index],
                       style: TextStyle(
                         color: labelTextColor,
-                        fontSize: 10,
+                        fontSize: 9,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -151,7 +137,7 @@ class WeeklyBarChart extends StatelessWidget {
   }
 
   List<BarChartGroupData> _buildGroups() {
-    final List<BarChartGroupData> groups = <BarChartGroupData>[];
+    final groups = <BarChartGroupData>[];
 
     for (int i = 0; i < data.length; i++) {
       groups.add(
@@ -161,7 +147,7 @@ class WeeklyBarChart extends StatelessWidget {
             BarChartRodData(
               toY: data[i],
               color: accent,
-              width: 15,
+              width: barWidth,
               borderRadius: BorderRadius.circular(2),
               backDrawRodData: BackgroundBarChartRodData(
                 show: true,
