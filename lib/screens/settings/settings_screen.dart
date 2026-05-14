@@ -12,7 +12,7 @@ import 'widgets/settings_header.dart';
 import 'widgets/settings_info_tile.dart';
 import 'widgets/settings_section.dart';
 
-/// Settings screen showing account info, basic preferences, and sign-out.
+/// Settings screen showing account, data, app info and session actions.
 class SettingsScreen extends StatefulWidget {
   /// Creates the settings screen.
   const SettingsScreen({super.key});
@@ -24,8 +24,7 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
-  bool _notificationsEnabled = true;
-  bool _darkModeEnabled = true;
+  static const String _appVersion = 'v1.6.0';
 
   void _openDrawer() {
     final ScaffoldState? scaffold = _scaffoldKey.currentState;
@@ -34,11 +33,39 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
+  Future<void> _confirmSignOut() async {
+    final bool shouldSignOut =
+        await showDialog<bool>(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: const Text('Sign out'),
+              content: const Text('Do you want to close your current session?'),
+              actions: <Widget>[
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  child: const Text('Cancel'),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(true),
+                  child: const Text('Sign out'),
+                ),
+              ],
+            );
+          },
+        ) ??
+        false;
+
+    if (!shouldSignOut) return;
+
+    await _signOut();
+  }
+
   Future<void> _signOut() async {
     final habitCatalogStore = context.read<HabitCatalogStore>();
     final habitDayStore = context.read<HabitDayStore>();
     final dailyMetricsStore = context.read<DailyMetricsStore>();
-    final navigator = Navigator.of(context);
+    final NavigatorState navigator = Navigator.of(context);
 
     await habitCatalogStore.clearAll();
     await habitDayStore.clearAll();
@@ -52,6 +79,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
       AppRoutes.home,
       (Route<dynamic> route) => false,
     );
+  }
+
+  void _openCredits() {
+    Navigator.pushNamed(context, AppRoutes.credits);
   }
 
   @override
@@ -75,63 +106,73 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   children: <Widget>[
                     SettingsHeader(onMenuTap: _openDrawer),
                     const SizedBox(height: 30),
+
                     SettingsSection(
                       title: 'ACCOUNT',
                       children: <Widget>[
                         SettingsInfoTile(
-                          icon: Icons.person_outline,
+                          icon: Icons.email_outlined,
                           title: 'Email',
                           subtitle: user?.email ?? 'No email available',
                         ),
                         const SizedBox(height: 8),
-                        SettingsInfoTile(
-                          icon: Icons.badge_outlined,
-                          title: 'User ID',
-                          subtitle: user?.uid ?? 'No user ID available',
+                        const SettingsInfoTile(
+                          icon: Icons.lock_reset,
+                          title: 'Change password',
+                          subtitle: 'Password reset is currently unavailable',
                         ),
                       ],
                     ),
+
                     const SizedBox(height: 28),
-                    SettingsSection(
-                      title: 'PREFERENCES',
+
+                    const SettingsSection(
+                      title: 'DATA',
                       children: <Widget>[
-                        SwitchListTile(
-                          contentPadding: EdgeInsets.zero,
-                          value: _notificationsEnabled,
-                          onChanged: (bool value) {
-                            setState(() {
-                              _notificationsEnabled = value;
-                            });
-                          },
-                          title: const Text('Notifications'),
-                          subtitle: const Text(
-                            'Enable basic app notifications',
-                          ),
-                        ),
-                        SwitchListTile(
-                          contentPadding: EdgeInsets.zero,
-                          value: _darkModeEnabled,
-                          onChanged: (bool value) {
-                            setState(() {
-                              _darkModeEnabled = value;
-                            });
-                          },
-                          title: const Text('Dark mode'),
-                          subtitle: const Text('Local visual preference'),
+                        SettingsInfoTile(
+                          icon: Icons.cloud_done_outlined,
+                          title: 'Automatic sync',
+                          subtitle: 'Your data syncs when you open the app',
                         ),
                       ],
                     ),
+
                     const SizedBox(height: 28),
+
+                    SettingsSection(
+                      title: 'APP',
+                      children: <Widget>[
+                        const SettingsInfoTile(
+                          icon: Icons.info_outline,
+                          title: 'Version',
+                          subtitle: _appVersion,
+                        ),
+                        const SizedBox(height: 8),
+                        SettingsInfoTile(
+                          icon: Icons.code,
+                          title: 'Credits / Architecture',
+                          subtitle: 'View project technologies',
+                          trailing: const Icon(Icons.chevron_right),
+                          onTap: _openCredits,
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 28),
+
                     SettingsSection(
                       title: 'SESSION',
                       children: <Widget>[
-                        ElevatedButton.icon(
-                          onPressed: _signOut,
-                          icon: const Icon(Icons.logout),
-                          label: const Text('Sign out'),
+                        SettingsInfoTile(
+                          icon: Icons.logout,
+                          title: 'Sign out',
+                          subtitle: 'Close your current session',
+                          trailing: const Icon(Icons.chevron_right),
+                          onTap: _confirmSignOut,
                         ),
                       ],
                     ),
+
                     const SizedBox(height: 12),
                   ],
                 ),

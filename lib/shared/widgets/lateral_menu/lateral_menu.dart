@@ -86,14 +86,6 @@ class LateralMenu extends StatelessWidget {
               routeName: AppRoutes.settings,
               replace: true,
             ),
-            LateralMenuItem(
-              label: 'ABOUT',
-              selected: currentRoute == AppRoutes.credits,
-              accent: accent,
-              textMuted: textMuted,
-              routeName: AppRoutes.credits,
-              replace: true,
-            ),
 
             const Spacer(),
 
