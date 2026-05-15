@@ -1,29 +1,37 @@
 import 'package:flutter/material.dart';
+
 import 'package:habit_control/shared/widgets/app_logo.dart';
 
 /// Header section of the [LateralMenu] drawer.
 class LateralMenuHeader extends StatelessWidget {
-  final Color textMain;
-
-  const LateralMenuHeader({super.key, required this.textMain});
+  const LateralMenuHeader({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Padding(
-      padding: const EdgeInsets.fromLTRB(18, 18, 18, 12),
+      padding: const EdgeInsets.fromLTRB(20, 22, 20, 18),
       child: Column(
         children: <Widget>[
-          const AppLogo(size: 150),
-          const SizedBox(height: 25),
+          const AppLogo(size: 130),
+          const SizedBox(height: 20),
           Text(
             'HABIT\nCONTROL',
             textAlign: TextAlign.center,
-            style: TextStyle(
-              color: textMain,
-              fontSize: 28,
-              fontWeight: FontWeight.w900,
+            style: theme.textTheme.headlineMedium?.copyWith(
               height: 1.05,
               letterSpacing: 1.8,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'PERSONAL HABIT TRACKER',
+            textAlign: TextAlign.center,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.primary,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 1.5,
             ),
           ),
         ],

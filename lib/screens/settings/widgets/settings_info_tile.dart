@@ -1,12 +1,6 @@
 import 'package:flutter/material.dart';
 
 class SettingsInfoTile extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final VoidCallback? onTap;
-  final Widget? trailing;
-
   const SettingsInfoTile({
     super.key,
     required this.icon,
@@ -16,15 +10,34 @@ class SettingsInfoTile extends StatelessWidget {
     this.trailing,
   });
 
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback? onTap;
+  final Widget? trailing;
+
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return ListTile(
-      contentPadding: EdgeInsets.zero,
-      leading: Icon(icon, color: Theme.of(context).iconTheme.color),
-      title: Text(title),
-      subtitle: Text(subtitle, style: Theme.of(context).textTheme.bodySmall),
-      trailing: trailing,
       onTap: onTap,
+      contentPadding: EdgeInsets.zero,
+      minLeadingWidth: 28,
+      leading: Icon(icon, color: theme.colorScheme.primary),
+      title: Text(
+        title,
+        style: theme.textTheme.bodyLarge?.copyWith(
+          fontSize: 14,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+      subtitle: Padding(
+        padding: const EdgeInsets.only(top: 3),
+        child: Text(subtitle, style: theme.textTheme.bodySmall),
+      ),
+      trailing: trailing,
+      iconColor: theme.colorScheme.primary,
     );
   }
 }

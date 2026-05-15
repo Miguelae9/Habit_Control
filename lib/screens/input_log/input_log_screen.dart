@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 
 import 'package:habit_control/shared/widgets/lateral_menu/lateral_menu.dart';
 import 'package:habit_control/shared/widgets/online_badge.dart';
+import 'package:habit_control/shared/widgets/ui/app_card.dart';
+import 'package:habit_control/shared/widgets/ui/app_section_title.dart';
 import 'package:habit_control/shared/state/daily_metrics_store.dart';
 import 'package:habit_control/screens/input_log/models/metric_definition.dart';
 import 'package:habit_control/screens/input_log/widgets/metric_row.dart';
@@ -193,7 +195,6 @@ class _InputLogScreenState extends State<InputLogScreen> {
     final bg = theme.scaffoldBackgroundColor;
     final textMain = theme.textTheme.bodyLarge?.color ?? Colors.white;
     final textMuted = theme.textTheme.bodyMedium?.color ?? Colors.grey;
-    final accent = theme.primaryColor;
 
     final definitions = store.getActiveDefinitions();
 
@@ -211,6 +212,8 @@ class _InputLogScreenState extends State<InputLogScreen> {
     return Scaffold(
       floatingActionButton: FloatingActionButton(
         onPressed: _openCreateMetricDialog,
+        backgroundColor: theme.colorScheme.primary,
+        foregroundColor: theme.colorScheme.onPrimary,
         child: const Icon(Icons.add),
       ),
       backgroundColor: bg,
@@ -229,7 +232,10 @@ class _InputLogScreenState extends State<InputLogScreen> {
                       Builder(
                         builder: (BuildContext ctx) {
                           return IconButton(
-                            icon: Icon(Icons.menu, color: textMain),
+                            icon: Icon(
+                              Icons.menu,
+                              color: theme.colorScheme.primary,
+                            ),
                             onPressed: () {
                               Scaffold.of(ctx).openDrawer();
                             },
@@ -240,68 +246,46 @@ class _InputLogScreenState extends State<InputLogScreen> {
                       OnlineBadge(textColor: textMain),
                     ],
                   ),
-                  const SizedBox(height: 26),
-                  Text(
-                    'DAILY METRICS',
-                    textAlign: TextAlign.center,
-                    style:
-                        theme.textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 2,
-                          color: textMain,
-                          fontSize: 26,
-                        ) ??
-                        TextStyle(
-                          fontSize: 26,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 2,
-                          color: textMain,
+                  const SizedBox(height: 18),
+
+                  AppCard(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        const AppSectionTitle(
+                          title: 'DAILY METRICS',
+                          subtitle:
+                              'Enter context data for your daily analysis',
+                          icon: Icons.monitor_heart_outlined,
                         ),
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    'ENTER DATA FOR CALCULATION',
-                    textAlign: TextAlign.center,
-                    style:
-                        theme.textTheme.bodySmall?.copyWith(
-                          letterSpacing: 2,
-                          color: textMuted,
-                          fontSize: 11,
-                        ) ??
-                        TextStyle(
-                          fontSize: 11,
-                          letterSpacing: 2,
-                          color: textMuted,
+                        const SizedBox(height: 16),
+                        Text(
+                          selectedDayKey,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            letterSpacing: 1.4,
+                          ),
                         ),
-                  ),
-                  const SizedBox(height: 28),
-                  Text(
-                    selectedDayKey,
-                    textAlign: TextAlign.center,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: textMuted,
-                      letterSpacing: 1.4,
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 24),
+
+                  const SizedBox(height: 18),
 
                   if (_loading)
-                    const Center(
-                      child: Padding(
-                        padding: EdgeInsets.symmetric(vertical: 32),
-                        child: CircularProgressIndicator(),
+                    const AppCard(
+                      child: Center(
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(vertical: 24),
+                          child: CircularProgressIndicator(),
+                        ),
                       ),
                     )
                   else if (definitions.isEmpty)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 24),
+                    AppCard(
                       child: Text(
-                        'NO METRICS AVAILABLE',
+                        'No metrics available.',
                         textAlign: TextAlign.center,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: textMuted,
-                          letterSpacing: 1.4,
-                        ),
+                        style: theme.textTheme.bodyMedium,
                       ),
                     )
                   else
@@ -316,7 +300,7 @@ class _InputLogScreenState extends State<InputLogScreen> {
 
                       return Padding(
                         padding: EdgeInsets.only(
-                          bottom: index == definitions.length - 1 ? 0 : 28,
+                          bottom: index == definitions.length - 1 ? 0 : 12,
                         ),
                         child: MetricRow(
                           label: _labelFor(definition),
@@ -329,9 +313,6 @@ class _InputLogScreenState extends State<InputLogScreen> {
                           onDelete: _isProtectedBaseMetric(definition)
                               ? null
                               : () => _confirmDeleteMetric(definition),
-                          textColor: textMuted,
-                          valueColor: textMain,
-                          accent: accent,
                           suffix: definition.unit,
                         ),
                       );

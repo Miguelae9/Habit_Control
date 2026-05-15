@@ -1,8 +1,21 @@
 import 'package:flutter/material.dart';
+
+import 'package:habit_control/shared/widgets/ui/app_card.dart';
 import 'step_button.dart';
 
-/// Fila de métrica con etiqueta, valor, acciones y botones +/-.
+/// Metric row with label, value, actions and +/- buttons.
 class MetricRow extends StatelessWidget {
+  const MetricRow({
+    super.key,
+    required this.label,
+    required this.value,
+    required this.onMinus,
+    required this.onPlus,
+    this.suffix,
+    this.onEdit,
+    this.onDelete,
+  });
+
   final String label;
   final String value;
   final String? suffix;
@@ -11,98 +24,80 @@ class MetricRow extends StatelessWidget {
   final VoidCallback? onEdit;
   final VoidCallback? onDelete;
 
-  final Color textColor;
-  final Color valueColor;
-  final Color accent;
-
-  const MetricRow({
-    super.key,
-    required this.label,
-    required this.value,
-    required this.onMinus,
-    required this.onPlus,
-    required this.textColor,
-    required this.valueColor,
-    required this.accent,
-    this.suffix,
-    this.onEdit,
-    this.onDelete,
-  });
-
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final hasSuffix = suffix != null && suffix!.trim().isNotEmpty;
 
-    return Column(
-      children: <Widget>[
-        Row(
-          children: <Widget>[
-            Expanded(
-              child: Text(
-                label,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 12,
-                  letterSpacing: 1.8,
-                  color: textColor,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-            if (onEdit != null)
-              IconButton(
-                icon: Icon(Icons.edit_outlined, color: textColor, size: 18),
-                tooltip: 'Editar métrica',
-                onPressed: onEdit,
-              ),
-            if (onDelete != null)
-              IconButton(
-                icon: Icon(Icons.delete_outline, color: textColor, size: 18),
-                tooltip: 'Eliminar métrica',
-                onPressed: onDelete,
-              ),
-          ],
-        ),
-        const SizedBox(height: 14),
-        Row(
-          children: <Widget>[
-            StepButton(isPlus: false, onTap: onMinus, accent: accent),
-            const SizedBox(width: 18),
-            Expanded(
-              child: Center(
-                child: RichText(
-                  textAlign: TextAlign.center,
-                  text: TextSpan(
-                    children: [
-                      TextSpan(
-                        text: value,
-                        style: TextStyle(
-                          fontSize: 34,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 2,
-                          color: valueColor,
-                        ),
-                      ),
-                      if (hasSuffix)
-                        TextSpan(
-                          text: ' ${suffix!}',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: 1.2,
-                            color: textColor,
-                          ),
-                        ),
-                    ],
+    return AppCard(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
+      child: Column(
+        children: <Widget>[
+          Row(
+            children: <Widget>[
+              Expanded(
+                child: Text(
+                  label.toUpperCase(),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 1.6,
                   ),
                 ),
               ),
-            ),
-            const SizedBox(width: 18),
-            StepButton(isPlus: true, onTap: onPlus, accent: accent),
-          ],
-        ),
-      ],
+              if (onEdit != null)
+                IconButton(
+                  icon: const Icon(Icons.edit_outlined, size: 18),
+                  tooltip: 'Edit metric',
+                  onPressed: onEdit,
+                ),
+              if (onDelete != null)
+                IconButton(
+                  icon: const Icon(Icons.delete_outline, size: 18),
+                  tooltip: 'Delete metric',
+                  onPressed: onDelete,
+                ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: <Widget>[
+              StepButton(isPlus: false, onTap: onMinus),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Center(
+                  child: RichText(
+                    textAlign: TextAlign.center,
+                    text: TextSpan(
+                      children: <TextSpan>[
+                        TextSpan(
+                          text: value,
+                          style: theme.textTheme.headlineMedium?.copyWith(
+                            fontSize: 34,
+                            letterSpacing: 2,
+                            color: theme.colorScheme.onSurface,
+                          ),
+                        ),
+                        if (hasSuffix)
+                          TextSpan(
+                            text: ' ${suffix!}',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              fontWeight: FontWeight.w600,
+                              letterSpacing: 1.2,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 16),
+              StepButton(isPlus: true, onTap: onPlus),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }

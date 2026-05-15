@@ -24,7 +24,7 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
-  static const String _appVersion = 'v1.6.0';
+  static const String _appVersion = 'v1.9.0';
 
   void _openDrawer() {
     final ScaffoldState? scaffold = _scaffoldKey.currentState;
@@ -109,6 +109,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
                     SettingsSection(
                       title: 'ACCOUNT',
+                      subtitle: 'Manage your user access',
+                      icon: Icons.person_outline,
                       children: <Widget>[
                         SettingsInfoTile(
                           icon: Icons.email_outlined,
@@ -128,6 +130,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
                     const SettingsSection(
                       title: 'DATA',
+                      subtitle: 'Local data and cloud sync',
+                      icon: Icons.storage_outlined,
                       children: <Widget>[
                         SettingsInfoTile(
                           icon: Icons.cloud_done_outlined,
@@ -141,6 +145,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
                     SettingsSection(
                       title: 'APP',
+                      subtitle: 'Version and project information',
+                      icon: Icons.phone_android,
                       children: <Widget>[
                         const SettingsInfoTile(
                           icon: Icons.info_outline,
@@ -162,6 +168,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
                     SettingsSection(
                       title: 'SESSION',
+                      subtitle: 'Account session actions',
+                      icon: Icons.logout,
                       children: <Widget>[
                         SettingsInfoTile(
                           icon: Icons.logout,

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:habit_control/shared/widgets/lateral_menu/lateral_menu.dart';
+import 'package:habit_control/shared/widgets/ui/app_card.dart';
+import 'package:habit_control/shared/widgets/ui/app_section_title.dart';
 
 import 'widgets/stat_card.dart';
 import 'widgets/weekly_bar_chart.dart';
@@ -354,19 +356,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     );
   }
 
-  Widget _buildSectionTitle(String text, Color color) {
-    return Text(
-      text,
-      textAlign: TextAlign.center,
-      style: TextStyle(
-        fontSize: 12,
-        fontWeight: FontWeight.w700,
-        letterSpacing: 1.8,
-        color: color,
-      ),
-    );
-  }
-
   Widget _buildQuoteSection(TextStyle quoteStyle, TextStyle authorStyle) {
     if (_quoteText.isEmpty || _quoteAuthor.isEmpty) {
       return const SizedBox.shrink();
@@ -387,7 +376,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     final ThemeData theme = Theme.of(context);
 
     final Color bg = theme.scaffoldBackgroundColor;
-    const Color cardBg = Color(0xFF0F172A);
 
     final Color textMain =
         theme.textTheme.headlineLarge?.color ?? const Color(0xFFF8FAFC);
@@ -395,8 +383,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     final Color textMuted =
         theme.textTheme.bodyMedium?.color ?? const Color(0xFF94A3B8);
 
-    final Color accent = theme.primaryColor;
-
+    final Color accent = theme.colorScheme.primary;
     final Color gridColor = textMuted.withValues(alpha: 0.18);
     final Color borderColor = accent.withValues(alpha: 0.35);
     final Color axisTextColor = textMuted.withValues(alpha: 0.85);
@@ -506,10 +493,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     return Scaffold(
       key: _scaffoldKey,
       backgroundColor: bg,
-      drawer: const Drawer(
-        backgroundColor: Color.fromARGB(34, 0, 70, 221),
-        child: LateralMenu(),
-      ),
+      drawer: const Drawer(child: LateralMenu()),
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
@@ -522,37 +506,47 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                   children: <Widget>[
                     Row(
                       children: <Widget>[
-                        _buildMenuButton(textMain),
+                        _buildMenuButton(theme.colorScheme.primary),
                         const Spacer(),
                         Text(
                           'ANALYTICS',
-                          style: TextStyle(
-                            fontSize: 11,
-                            letterSpacing: 1.8,
-                            color: textMain,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.primary,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 2,
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 18),
 
-                    _buildSectionTitle('WEEKLY PERFORMANCE', textMain),
-                    const SizedBox(height: 24),
-
-                    SizedBox(
-                      height: 300,
-                      child: WeeklyBarChart(
-                        data: weekData,
-                        labels: weekLabels,
-                        accent: accent,
-                        gridColor: gridColor,
-                        borderColor: borderColor,
-                        axisTextColor: axisTextColor,
-                        labelTextColor: textMuted,
+                    AppCard(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          const AppSectionTitle(
+                            title: 'WEEKLY PERFORMANCE',
+                            subtitle: 'Habit completion from Monday to Sunday',
+                            icon: Icons.bar_chart,
+                          ),
+                          const SizedBox(height: 20),
+                          SizedBox(
+                            height: 280,
+                            child: WeeklyBarChart(
+                              data: weekData,
+                              labels: weekLabels,
+                              accent: accent,
+                              gridColor: gridColor,
+                              borderColor: borderColor,
+                              axisTextColor: axisTextColor,
+                              labelTextColor: textMuted,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
 
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 18),
 
                     Row(
                       children: <Widget>[
@@ -561,9 +555,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                             title: 'CONSISTENCY',
                             value: '$consistencyPct%',
                             showUpArrow: consistencyPct > 0,
-                            textMain: textMain,
-                            borderColor: borderColor,
-                            bg: cardBg,
                           ),
                         ),
                         const SizedBox(width: 10),
@@ -572,9 +563,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                             title: 'VS LAST WEEK',
                             value: comparison,
                             showUpArrow: comparison.startsWith('+'),
-                            textMain: textMain,
-                            borderColor: borderColor,
-                            bg: cardBg,
                           ),
                         ),
                       ],
@@ -588,47 +576,46 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                           child: StatCard(
                             title: 'CURRENT STREAK',
                             value: '$streak DAYS',
-                            showUpArrow: false,
-                            textMain: textMain,
-                            borderColor: textMuted.withValues(alpha: 0.5),
-                            bg: cardBg,
                           ),
                         ),
                         const SizedBox(width: 10),
                         Expanded(
-                          child: StatCard(
-                            title: 'BEST DAY',
-                            value: bestDay,
-                            showUpArrow: false,
-                            textMain: textMain,
-                            borderColor: borderColor,
-                            bg: cardBg,
-                          ),
+                          child: StatCard(title: 'BEST DAY', value: bestDay),
                         ),
                       ],
                     ),
 
                     const SizedBox(height: 28),
 
-                    _buildSectionTitle('MONTHLY OVERVIEW', textMain),
-                    const SizedBox(height: 24),
-
-                    SizedBox(
-                      height: 260,
-                      child: WeeklyBarChart(
-                        data: monthData,
-                        labels: monthLabels,
-                        accent: accent,
-                        gridColor: gridColor,
-                        borderColor: borderColor,
-                        axisTextColor: axisTextColor,
-                        labelTextColor: textMuted,
-                        barWidth: 7,
-                        labelStep: 5,
+                    AppCard(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          const AppSectionTitle(
+                            title: 'MONTHLY OVERVIEW',
+                            subtitle: 'Completion trend for the current month',
+                            icon: Icons.calendar_month,
+                          ),
+                          const SizedBox(height: 20),
+                          SizedBox(
+                            height: 250,
+                            child: WeeklyBarChart(
+                              data: monthData,
+                              labels: monthLabels,
+                              accent: accent,
+                              gridColor: gridColor,
+                              borderColor: borderColor,
+                              axisTextColor: axisTextColor,
+                              labelTextColor: textMuted,
+                              barWidth: 7,
+                              labelStep: 5,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
 
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 18),
 
                     Row(
                       children: <Widget>[
@@ -637,21 +624,11 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                             title: 'MONTH AVG',
                             value: '$monthlyPct%',
                             showUpArrow: monthlyPct > 0,
-                            textMain: textMain,
-                            borderColor: borderColor,
-                            bg: cardBg,
                           ),
                         ),
                         const SizedBox(width: 10),
                         Expanded(
-                          child: StatCard(
-                            title: 'TOP HABIT',
-                            value: topHabit,
-                            showUpArrow: false,
-                            textMain: textMain,
-                            borderColor: borderColor,
-                            bg: cardBg,
-                          ),
+                          child: StatCard(title: 'TOP HABIT', value: topHabit),
                         ),
                       ],
                     ),
@@ -661,31 +638,36 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                     Row(
                       children: <Widget>[
                         Expanded(
-                          child: StatCard(
-                            title: 'AVG SLEEP',
-                            value: avgSleep,
-                            showUpArrow: false,
-                            textMain: textMain,
-                            borderColor: borderColor,
-                            bg: cardBg,
-                          ),
+                          child: StatCard(title: 'AVG SLEEP', value: avgSleep),
                         ),
                         const SizedBox(width: 10),
                         Expanded(
                           child: StatCard(
                             title: 'AVG ENERGY',
                             value: avgEnergy,
-                            showUpArrow: false,
-                            textMain: textMain,
-                            borderColor: borderColor,
-                            bg: cardBg,
                           ),
                         ),
                       ],
                     ),
 
-                    const SizedBox(height: 24),
-                    _buildQuoteSection(quoteStyle, authorStyle),
+                    const SizedBox(height: 18),
+
+                    if (_quoteText.isNotEmpty && _quoteAuthor.isNotEmpty)
+                      AppCard(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            const AppSectionTitle(
+                              title: 'STOIC NOTE',
+                              subtitle: 'Short reflection for your progress',
+                              icon: Icons.format_quote,
+                            ),
+                            const SizedBox(height: 18),
+                            _buildQuoteSection(quoteStyle, authorStyle),
+                          ],
+                        ),
+                      ),
+
                     const SizedBox(height: 12),
                   ],
                 ),

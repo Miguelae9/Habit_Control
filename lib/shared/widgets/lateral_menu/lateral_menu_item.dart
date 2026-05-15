@@ -2,13 +2,20 @@ import 'package:flutter/material.dart';
 
 /// Drawer item that navigates to a named route or runs a custom callback.
 class LateralMenuItem extends StatelessWidget {
-  static const Color _card = Color(0xFF141A22);
-  static const Color _border = Color(0xFF1F2A37);
+  const LateralMenuItem({
+    super.key,
+    required this.icon,
+    required this.label,
+    required this.selected,
+    this.routeName,
+    this.replace = true,
+    this.clearStack = false,
+    this.onTap,
+  });
 
+  final IconData icon;
   final String label;
   final bool selected;
-  final Color accent;
-  final Color textMuted;
 
   final String? routeName;
   final bool replace;
@@ -16,57 +23,50 @@ class LateralMenuItem extends StatelessWidget {
 
   final Future<void> Function(BuildContext)? onTap;
 
-  const LateralMenuItem({
-    super.key,
-    required this.label,
-    required this.selected,
-    required this.accent,
-    required this.textMuted,
-    this.routeName,
-    this.replace = true,
-    this.clearStack = false,
-    this.onTap,
-  });
-
   @override
   Widget build(BuildContext context) {
-    final Color color = selected ? accent : textMuted;
+    final theme = Theme.of(context);
 
-    return Container(
-      height: 48,
-      decoration: const BoxDecoration(
-        color: _card,
-        border: Border(
-          top: BorderSide(color: _border),
-          bottom: BorderSide(color: _border),
-        ),
-      ),
-      child: InkWell(
-        onTap: _handleTapNoArgs(context),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14),
-          child: Row(
-            children: <Widget>[
-              Text(
-                '>',
-                style: TextStyle(
-                  color: color,
-                  fontSize: 12,
-                  letterSpacing: 1.2,
-                  fontWeight: FontWeight.w700,
+    final color = selected
+        ? theme.colorScheme.primary
+        : theme.textTheme.bodyMedium?.color ?? Colors.grey;
+
+    final backgroundColor = selected
+        ? theme.colorScheme.primary.withValues(alpha: 0.10)
+        : Colors.transparent;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      child: Material(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(14),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(14),
+          onTap: _handleTapNoArgs(context),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+            child: Row(
+              children: <Widget>[
+                Icon(icon, color: color, size: 20),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    label,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: color,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 1.4,
+                    ),
+                  ),
                 ),
-              ),
-              const SizedBox(width: 10),
-              Text(
-                label,
-                style: TextStyle(
-                  color: color,
-                  fontSize: 12,
-                  letterSpacing: 1.6,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ],
+                if (selected)
+                  Icon(
+                    Icons.chevron_right,
+                    color: theme.colorScheme.primary,
+                    size: 18,
+                  ),
+              ],
+            ),
           ),
         ),
       ),

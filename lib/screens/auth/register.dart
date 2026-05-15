@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:habit_control/router/app_routes.dart';
+import 'package:habit_control/shared/widgets/ui/app_card.dart';
 
 import 'widgets/auth_logo.dart';
 import 'widgets/auth_primary_button.dart';
@@ -137,49 +138,55 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     color: textMuted,
                   ),
                 ),
+                const SizedBox(height: 30),
 
-                const SizedBox(height: 50),
+                AppCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: <Widget>[
+                      const AuthSectionLabel(text: '> NEW IDENTIFIER'),
+                      const SizedBox(height: 10),
+                      AuthTextField(
+                        controller: _userCtrl,
+                        hintText: 'user@gmail.com',
+                        obscureText: false,
+                      ),
 
-                const AuthSectionLabel(text: '> NEW IDENTIFIER'),
-                const SizedBox(height: 10),
-                AuthTextField(
-                  controller: _userCtrl,
-                  hintText: 'user@gmail.com',
-                  obscureText: false,
-                ),
+                      const SizedBox(height: 18),
 
-                const SizedBox(height: 18),
+                      const AuthSectionLabel(text: '> NEW ACCESS KEY'),
+                      const SizedBox(height: 10),
+                      AuthTextField(
+                        controller: _passCtrl,
+                        hintText: '•••••••',
+                        obscureText: true,
+                      ),
 
-                const AuthSectionLabel(text: '> NEW ACCESS KEY'),
-                const SizedBox(height: 10),
-                AuthTextField(
-                  controller: _passCtrl,
-                  hintText: '•••••••',
-                  obscureText: true,
-                ),
+                      const SizedBox(height: 28),
 
-                const SizedBox(height: 40),
+                      AuthPrimaryButton(text: buttonText, onPressed: onPressed),
 
-                AuthPrimaryButton(text: buttonText, onPressed: onPressed),
+                      const SizedBox(height: 14),
 
-                const SizedBox(height: 18),
-
-                TextButton(
-                  onPressed: _isLoading
-                      ? null
-                      : () {
-                          Navigator.pushReplacementNamed(
-                            context,
-                            AppRoutes.home,
-                          );
-                        },
-                  child: const Text('Go back to login'),
+                      TextButton(
+                        onPressed: _isLoading
+                            ? null
+                            : () {
+                                Navigator.pushReplacementNamed(
+                                  context,
+                                  AppRoutes.home,
+                                );
+                              },
+                        child: const Text('Go back to login'),
+                      ),
+                    ],
+                  ),
                 ),
 
                 const SizedBox(height: 20),
 
                 Text(
-                  'v1.6.0 [MVP_BUILD]',
+                  'v1.9.0 [MVP_BUILD]',
                   textAlign: TextAlign.center,
                   style: theme.textTheme.bodySmall?.copyWith(
                     fontSize: 10,

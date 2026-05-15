@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:habit_control/router/app_routes.dart';
+import 'package:habit_control/shared/widgets/ui/app_card.dart';
 
 import 'widgets/auth_logo.dart';
 import 'widgets/auth_primary_button.dart';
@@ -133,45 +134,57 @@ class _LoginScreenState extends State<LoginScreen> {
                     color: textMuted,
                   ),
                 ),
-                const SizedBox(height: 50),
+                const SizedBox(height: 30),
 
-                const AuthSectionLabel(text: '> IDENTIFIER'),
-                const SizedBox(height: 10),
-                AuthTextField(
-                  controller: _userCtrl,
-                  hintText: 'user@gmail.com',
-                  obscureText: false,
-                ),
+                AppCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: <Widget>[
+                      const AuthSectionLabel(text: '> IDENTIFIER'),
+                      const SizedBox(height: 10),
+                      AuthTextField(
+                        controller: _userCtrl,
+                        hintText: 'user@gmail.com',
+                        obscureText: false,
+                      ),
 
-                const SizedBox(height: 18),
+                      const SizedBox(height: 18),
 
-                const AuthSectionLabel(text: '> ACCESS KEY'),
-                const SizedBox(height: 10),
-                AuthTextField(
-                  controller: _passCtrl,
-                  hintText: '•••••••',
-                  obscureText: true,
-                ),
+                      const AuthSectionLabel(text: '> ACCESS KEY'),
+                      const SizedBox(height: 10),
+                      AuthTextField(
+                        controller: _passCtrl,
+                        hintText: '•••••••',
+                        obscureText: true,
+                      ),
 
-                const SizedBox(height: 40),
+                      const SizedBox(height: 28),
 
-                AuthPrimaryButton(text: buttonText, onPressed: onPressed),
+                      AuthPrimaryButton(text: buttonText, onPressed: onPressed),
 
-                const SizedBox(height: 18),
+                      const SizedBox(height: 14),
 
-                TextButton(
-                  onPressed: _isLoading
-                      ? null
-                      : () {
-                          Navigator.pushNamed(context, AppRoutes.register);
-                        },
-                  child: const Text("Don't have an account? Register here"),
+                      TextButton(
+                        onPressed: _isLoading
+                            ? null
+                            : () {
+                                Navigator.pushNamed(
+                                  context,
+                                  AppRoutes.register,
+                                );
+                              },
+                        child: const Text(
+                          "Don't have an account? Register here",
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
 
                 const SizedBox(height: 20),
 
                 Text(
-                  'v1.6.0 [MVP_BUILD]',
+                  'v1.9.0 [MVP_BUILD]',
                   textAlign: TextAlign.center,
                   style: theme.textTheme.bodySmall?.copyWith(
                     fontSize: 10,

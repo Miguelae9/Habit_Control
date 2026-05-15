@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:habit_control/shared/widgets/lateral_menu/lateral_menu.dart';
 
-/// Static "credits / architecture" screen.
-///
-/// Shows a drawer entry point and a list of technologies as plain text.
+import 'package:habit_control/shared/widgets/lateral_menu/lateral_menu.dart';
+import 'package:habit_control/shared/widgets/ui/app_card.dart';
+import 'package:habit_control/shared/widgets/ui/app_section_title.dart';
+
+/// Static credits and architecture screen.
 class CreditsScreen extends StatelessWidget {
   /// Creates the credits screen.
   const CreditsScreen({super.key});
@@ -11,24 +12,20 @@ class CreditsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      drawer: const Drawer(
-        backgroundColor: Color.fromARGB(34, 0, 70, 221),
-        child: LateralMenu(),
-      ),
-
+      drawer: const Drawer(child: LateralMenu()),
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
           child: Column(
-            children: [
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
               Row(
-                children: [
+                children: <Widget>[
                   Builder(
                     builder: (context) {
                       return IconButton(
                         icon: const Icon(Icons.menu),
-                        color: Theme.of(context).iconTheme.color,
                         onPressed: () {
                           Scaffold.of(context).openDrawer();
                         },
@@ -38,7 +35,7 @@ class CreditsScreen extends StatelessWidget {
                 ],
               ),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: 8),
 
               Text(
                 'SYSTEM\nARCHITECTURE',
@@ -48,82 +45,154 @@ class CreditsScreen extends StatelessWidget {
 
               const SizedBox(height: 28),
 
-              Text(
-                'CODE: [Miguel Ángel Pérez García]',
-                textAlign: TextAlign.center,
-                style: Theme.of(
-                  context,
-                ).textTheme.bodyMedium?.copyWith(fontSize: 12),
-              ),
-
-              const SizedBox(height: 8),
-
-              Text(
-                'BUILD: v1.6.0',
-                textAlign: TextAlign.center,
-                style: Theme.of(
-                  context,
-                ).textTheme.bodyMedium?.copyWith(fontSize: 12),
-              ),
-
-              const SizedBox(height: 32),
-
-              Text(
-                'TECHNOLOGIES',
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 2,
+              const AppCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    AppSectionTitle(
+                      title: 'PROJECT',
+                      subtitle: 'Application build and author information',
+                      icon: Icons.info_outline,
+                    ),
+                    SizedBox(height: 10),
+                    _InfoLine(
+                      label: 'CODE',
+                      value: 'Miguel Ángel Pérez García',
+                    ),
+                    SizedBox(height: 10),
+                    _InfoLine(label: 'BUILD', value: 'v1.9.0'),
+                  ],
                 ),
               ),
 
-              const SizedBox(height: 20),
+              const SizedBox(height: 18),
 
-              Text(
-                'FLUTTER (framework)',
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-              const SizedBox(height: 15),
-              Text(
-                'FIREBASE (auth & firestore)',
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-              const SizedBox(height: 15),
-              Text(
-                'PROVIDER (state management · MVVM)',
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-              const SizedBox(height: 15),
-              Text(
-                'GO ROUTER (navigation)',
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-              const SizedBox(height: 15),
-              Text(
-                'FL CHART (charts)',
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-              const SizedBox(height: 15),
-              Text(
-                'PERCENT INDICATOR (progress indicators)',
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-              const SizedBox(height: 15),
-              Text(
-                'GOOGLE FONTS (typography)',
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodySmall,
+              const AppCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    AppSectionTitle(
+                      title: 'TECHNOLOGIES',
+                      subtitle: 'Main tools currently used by the app',
+                      icon: Icons.memory,
+                    ),
+                    SizedBox(height: 10),
+                    _TechTile(
+                      icon: Icons.flutter_dash,
+                      title: 'Flutter',
+                      subtitle: 'Cross-platform UI framework',
+                    ),
+                    _TechTile(
+                      icon: Icons.lock_outline,
+                      title: 'Firebase Auth',
+                      subtitle: 'User registration, login and session handling',
+                    ),
+                    _TechTile(
+                      icon: Icons.cloud_outlined,
+                      title: 'Cloud Firestore',
+                      subtitle: 'Cloud persistence and synchronization',
+                    ),
+                    _TechTile(
+                      icon: Icons.storage_outlined,
+                      title: 'sqflite',
+                      subtitle: 'Local SQLite persistence',
+                    ),
+                    _TechTile(
+                      icon: Icons.sync_alt,
+                      title: 'Provider',
+                      subtitle: 'Shared app state management',
+                    ),
+                    _TechTile(
+                      icon: Icons.bar_chart,
+                      title: 'fl_chart',
+                      subtitle: 'Analytics charts and progress visualization',
+                    ),
+                    _TechTile(
+                      icon: Icons.donut_large,
+                      title: 'percent_indicator',
+                      subtitle: 'Circular and percentage progress indicators',
+                    ),
+                    _TechTile(
+                      icon: Icons.text_fields,
+                      title: 'Google Fonts',
+                      subtitle: 'Application typography',
+                    ),
+                    _TechTile(
+                      icon: Icons.calendar_month,
+                      title: 'intl',
+                      subtitle: 'Date formatting and locale support',
+                    ),
+                    _TechTile(
+                      icon: Icons.wb_cloudy_outlined,
+                      title: 'External APIs',
+                      subtitle: 'Weather and stoic quote services',
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
         ),
       ),
+    );
+  }
+}
+
+class _InfoLine extends StatelessWidget {
+  const _InfoLine({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return RichText(
+      text: TextSpan(
+        style: theme.textTheme.bodyMedium,
+        children: <TextSpan>[
+          TextSpan(
+            text: '$label: ',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.primary,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          TextSpan(text: value),
+        ],
+      ),
+    );
+  }
+}
+
+class _TechTile extends StatelessWidget {
+  const _TechTile({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      minLeadingWidth: 28,
+      leading: Icon(icon, color: theme.colorScheme.primary),
+      title: Text(
+        title,
+        style: theme.textTheme.bodyLarge?.copyWith(
+          fontSize: 14,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+      subtitle: Text(subtitle, style: theme.textTheme.bodySmall),
     );
   }
 }

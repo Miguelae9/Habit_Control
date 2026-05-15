@@ -1,25 +1,25 @@
-// widgets/settings_header.dart
 import 'package:flutter/material.dart';
 
 class SettingsHeader extends StatelessWidget {
-  final VoidCallback onMenuTap;
-
   const SettingsHeader({super.key, required this.onMenuTap});
+
+  final VoidCallback onMenuTap;
 
   @override
   Widget build(BuildContext context) {
-    final Color iconColor = Theme.of(context).iconTheme.color ?? Colors.white;
+    final theme = Theme.of(context);
 
     return Row(
       children: <Widget>[
-        IconButton(
-          icon: Icon(Icons.menu, color: iconColor),
-          onPressed: onMenuTap,
-        ),
+        IconButton(icon: const Icon(Icons.menu), onPressed: onMenuTap),
         const Spacer(),
         Text(
           'SETTINGS',
-          style: TextStyle(fontSize: 11, letterSpacing: 1.8, color: iconColor),
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.primary,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 2,
+          ),
         ),
       ],
     );

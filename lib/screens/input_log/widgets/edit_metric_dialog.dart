@@ -26,26 +26,26 @@ class _EditMetricDialogState extends State<EditMetricDialog> {
 
   final List<DropdownMenuItem<String>> _categoryItems =
       const <DropdownMenuItem<String>>[
-        DropdownMenuItem(value: 'sleep', child: Text('Sueño')),
-        DropdownMenuItem(value: 'energy', child: Text('Energía')),
+        DropdownMenuItem(value: 'sleep', child: Text('Sleep')),
+        DropdownMenuItem(value: 'energy', child: Text('Energy')),
         DropdownMenuItem(value: 'social', child: Text('Social')),
-        DropdownMenuItem(value: 'mood', child: Text('Estado de ánimo')),
-        DropdownMenuItem(value: 'focus', child: Text('Concentración')),
-        DropdownMenuItem(value: 'nutrition', child: Text('Nutrición')),
-        DropdownMenuItem(value: 'exercise', child: Text('Ejercicio')),
-        DropdownMenuItem(value: 'custom', child: Text('Personalizada')),
+        DropdownMenuItem(value: 'mood', child: Text('Mood')),
+        DropdownMenuItem(value: 'focus', child: Text('Focus')),
+        DropdownMenuItem(value: 'nutrition', child: Text('Nutrition')),
+        DropdownMenuItem(value: 'exercise', child: Text('Exercise')),
+        DropdownMenuItem(value: 'custom', child: Text('Custom')),
       ];
 
   final List<DropdownMenuItem<String>> _valueTypeItems =
       const <DropdownMenuItem<String>>[
-        DropdownMenuItem(value: 'int', child: Text('Entero')),
+        DropdownMenuItem(value: 'int', child: Text('Integer')),
         DropdownMenuItem(value: 'double', child: Text('Decimal')),
       ];
 
   final List<DropdownMenuItem<String>>
   _interpretationItems = const <DropdownMenuItem<String>>[
-    DropdownMenuItem(value: 'higher_better', child: Text('Más alto = mejor')),
-    DropdownMenuItem(value: 'lower_better', child: Text('Más bajo = mejor')),
+    DropdownMenuItem(value: 'higher_better', child: Text('Higher is Better')),
+    DropdownMenuItem(value: 'lower_better', child: Text('Lower is Better')),
     DropdownMenuItem(value: 'neutral', child: Text('Neutral')),
   ];
 
@@ -65,7 +65,7 @@ class _EditMetricDialogState extends State<EditMetricDialog> {
 
     if (name.isEmpty) {
       setState(() {
-        _error = 'Introduce un nombre.';
+        _error = 'Please enter a name.';
       });
       return;
     }
@@ -91,7 +91,7 @@ class _EditMetricDialogState extends State<EditMetricDialog> {
       if (!mounted) return;
       setState(() {
         _saving = false;
-        _error = 'No se pudo actualizar la métrica.';
+        _error = 'Failed to update the metric.';
       });
     }
   }
@@ -108,7 +108,7 @@ class _EditMetricDialogState extends State<EditMetricDialog> {
     final theme = Theme.of(context);
 
     return AlertDialog(
-      title: const Text('Editar métrica'),
+      title: const Text('Edit Metric'),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -117,8 +117,8 @@ class _EditMetricDialogState extends State<EditMetricDialog> {
               controller: _nameCtrl,
               textCapitalization: TextCapitalization.words,
               decoration: const InputDecoration(
-                labelText: 'Nombre',
-                hintText: 'Ej: Motivación',
+                labelText: 'Name',
+                hintText: 'Example: Motivation',
               ),
             ),
             const SizedBox(height: 14),
@@ -126,7 +126,7 @@ class _EditMetricDialogState extends State<EditMetricDialog> {
               initialValue: _semanticCategory,
               items: _categoryItems,
               decoration: const InputDecoration(
-                labelText: 'Categoría semántica',
+                labelText: 'Semantic Category',
               ),
               onChanged: (value) {
                 if (value == null) return;
@@ -139,7 +139,7 @@ class _EditMetricDialogState extends State<EditMetricDialog> {
             DropdownButtonFormField<String>(
               initialValue: _valueType,
               items: _valueTypeItems,
-              decoration: const InputDecoration(labelText: 'Tipo de valor'),
+              decoration: const InputDecoration(labelText: 'Value Type'),
               onChanged: (value) {
                 if (value == null) return;
                 setState(() {
@@ -151,15 +151,15 @@ class _EditMetricDialogState extends State<EditMetricDialog> {
             TextField(
               controller: _unitCtrl,
               decoration: const InputDecoration(
-                labelText: 'Unidad (opcional)',
-                hintText: 'Ej: h, /10, vasos',
+                labelText: 'Unit (optional)',
+                hintText: 'Example: h, /10, glasses',
               ),
             ),
             const SizedBox(height: 14),
             DropdownButtonFormField<String>(
               initialValue: _interpretation,
               items: _interpretationItems,
-              decoration: const InputDecoration(labelText: 'Interpretación'),
+              decoration: const InputDecoration(labelText: 'Interpretation'),
               onChanged: (value) {
                 if (value == null) return;
                 setState(() {
@@ -182,7 +182,7 @@ class _EditMetricDialogState extends State<EditMetricDialog> {
       actions: <Widget>[
         TextButton(
           onPressed: _saving ? null : () => Navigator.of(context).pop(false),
-          child: const Text('Cancelar'),
+          child: const Text('Cancel'),
         ),
         ElevatedButton(
           onPressed: _saving ? null : _save,
@@ -192,7 +192,7 @@ class _EditMetricDialogState extends State<EditMetricDialog> {
                   width: 18,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
-              : const Text('Guardar'),
+              : const Text('Save'),
         ),
       ],
     );

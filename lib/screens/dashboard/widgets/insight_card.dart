@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import 'package:habit_control/shared/widgets/ui/app_card.dart';
+import 'package:habit_control/shared/widgets/ui/app_section_title.dart';
+
 class InsightCard extends StatelessWidget {
   const InsightCard({super.key, required this.insight});
 
@@ -9,24 +12,20 @@ class InsightCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFF101826),
-        border: Border.all(color: const Color(0xFF334155)),
-      ),
+    return AppCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('INSIGHT', style: theme.textTheme.titleMedium),
-          const SizedBox(height: 6),
-          Text('Automatic daily summary', style: theme.textTheme.bodySmall),
-          const SizedBox(height: 14),
+        children: <Widget>[
+          const AppSectionTitle(
+            title: 'INSIGHT',
+            subtitle: 'Automatic daily summary',
+            icon: Icons.auto_awesome,
+          ),
+          const SizedBox(height: 16),
           Text(
             insight,
             style: theme.textTheme.bodyMedium?.copyWith(
-              color: Colors.white,
+              color: theme.colorScheme.onSurface,
               height: 1.4,
             ),
           ),

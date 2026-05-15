@@ -21,79 +21,57 @@ class LateralMenu extends StatelessWidget {
     return false;
   }
 
-  static const Color _border = Color(0xFF1F2A37);
-
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    final bg = theme.scaffoldBackgroundColor;
-    final accent = theme.primaryColor;
-
-    final textMain =
-        theme.textTheme.headlineLarge?.color ?? const Color(0xFFF8FAFC);
-    final textMuted =
-        theme.textTheme.bodyMedium?.color ?? const Color(0xFF94A3B8);
-
     final currentRoute = ModalRoute.of(context)?.settings.name;
 
-    return Container(
-      color: bg,
+    return ColoredBox(
+      color: Theme.of(context).scaffoldBackgroundColor,
       child: SafeArea(
         child: Column(
           children: <Widget>[
-            LateralMenuHeader(textMain: textMain),
-            const SizedBox(height: 20),
-            Container(height: 1, color: _border),
+            const LateralMenuHeader(),
+            const SizedBox(height: 12),
+            const Divider(),
 
             LateralMenuItem(
+              icon: Icons.dashboard_outlined,
               label: 'DASHBOARD',
               selected: currentRoute == AppRoutes.dashboard,
-              accent: accent,
-              textMuted: textMuted,
               routeName: AppRoutes.dashboard,
-              replace: true,
             ),
             LateralMenuItem(
+              icon: Icons.checklist,
               label: 'HABITS',
               selected: currentRoute == AppRoutes.habits,
-              accent: accent,
-              textMuted: textMuted,
               routeName: AppRoutes.habits,
-              replace: true,
             ),
             LateralMenuItem(
+              icon: Icons.monitor_heart_outlined,
               label: 'INPUT LOG',
               selected: currentRoute == AppRoutes.inputLog,
-              accent: accent,
-              textMuted: textMuted,
               routeName: AppRoutes.inputLog,
-              replace: true,
             ),
             LateralMenuItem(
+              icon: Icons.bar_chart,
               label: 'ANALYTICS',
               selected: currentRoute == AppRoutes.analytics,
-              accent: accent,
-              textMuted: textMuted,
               routeName: AppRoutes.analytics,
-              replace: true,
             ),
             LateralMenuItem(
+              icon: Icons.settings_outlined,
               label: 'SETTINGS',
               selected: currentRoute == AppRoutes.settings,
-              accent: accent,
-              textMuted: textMuted,
               routeName: AppRoutes.settings,
-              replace: true,
             ),
 
             const Spacer(),
+            const Divider(),
 
             LateralMenuItem(
+              icon: Icons.logout,
               label: 'LOG OUT',
               selected: false,
-              accent: accent,
-              textMuted: textMuted,
               onTap: _logout,
             ),
           ],

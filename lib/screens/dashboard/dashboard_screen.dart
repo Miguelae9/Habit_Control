@@ -104,10 +104,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
 
     return Scaffold(
-      drawer: const Drawer(
-        backgroundColor: Color.fromARGB(34, 0, 70, 221),
-        child: LateralMenu(),
-      ),
+      drawer: const Drawer(child: LateralMenu()),
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: SingleChildScrollView(

@@ -116,37 +116,65 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      backgroundColor: Color(0xFF0B0F14),
+    final theme = Theme.of(context);
+
+    return Scaffold(
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
         child: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              AppLogo(size: 300),
-              SizedBox(height: 50),
-              Text(
-                'HABIT\nCONTROL',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 40,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFFE5E7EB),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                const AppLogo(size: 280),
+
+                const SizedBox(height: 42),
+
+                Text(
+                  'HABIT\nCONTROL',
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.headlineLarge?.copyWith(
+                    height: 1.05,
+                    letterSpacing: 1.8,
+                  ),
                 ),
-              ),
-              SizedBox(height: 50),
-              CircularProgressIndicator(),
-              SizedBox(height: 50),
-              Text(
-                'v1.6.0 [MVP_BUILD]',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 10,
-                  letterSpacing: 1.2,
-                  color: Color(0xFF6B7280),
+
+                const SizedBox(height: 18),
+
+                Text(
+                  'PERSONAL HABIT TRACKER',
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.primary,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 1.6,
+                  ),
                 ),
-              ),
-            ],
+
+                const SizedBox(height: 42),
+
+                SizedBox(
+                  width: 34,
+                  height: 34,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 3,
+                    color: theme.colorScheme.primary,
+                  ),
+                ),
+
+                const SizedBox(height: 42),
+
+                Text(
+                  'v1.9.0 [MVP_BUILD]',
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    fontSize: 10,
+                    letterSpacing: 1.2,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

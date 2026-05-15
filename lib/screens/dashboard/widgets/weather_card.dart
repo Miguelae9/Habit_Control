@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+
 import 'package:habit_control/screens/dashboard/models/weather_info.dart';
+import 'package:habit_control/shared/widgets/ui/app_card.dart';
+import 'package:habit_control/shared/widgets/ui/app_section_title.dart';
 
 class WeatherCard extends StatelessWidget {
   const WeatherCard({
@@ -15,6 +18,7 @@ class WeatherCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final width = MediaQuery.of(context).size.width;
     final isMobile = width < 600;
 
@@ -31,62 +35,47 @@ class WeatherCard extends StatelessWidget {
         ? 'Loading weather...'
         : error ?? weather?.habitContext ?? 'Weather data unavailable.';
 
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(isMobile ? 14 : 18),
-      decoration: BoxDecoration(
-        color: const Color(0xFF162235),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFF334155)),
-      ),
+    return AppCard(
+      padding: EdgeInsets.all(isMobile ? 16 : 18),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: Theme.of(context).textTheme.bodySmall,
+        children: <Widget>[
+          AppSectionTitle(
+            title: title,
+            subtitle: 'Weather context for your habits',
+            icon: Icons.wb_cloudy_outlined,
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+            children: <Widget>[
               Expanded(
                 child: Text(
                   temperature,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontSize: isMobile ? 26 : 30,
-                    color: Colors.white,
-                    fontWeight: FontWeight.w700,
+                  style: theme.textTheme.headlineMedium?.copyWith(
+                    color: theme.colorScheme.onSurface,
                   ),
                 ),
               ),
               const SizedBox(width: 12),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    'HUM.: $humidity',
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
+                children: <Widget>[
+                  Text('HUM.: $humidity', style: theme.textTheme.bodySmall),
                   const SizedBox(height: 6),
-                  Text(
-                    'WIND: $wind',
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
+                  Text('WIND: $wind', style: theme.textTheme.bodySmall),
                 ],
               ),
             ],
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
           Text(
             message,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
-            style: Theme.of(context).textTheme.bodyMedium,
+            style: theme.textTheme.bodyMedium,
           ),
         ],
       ),

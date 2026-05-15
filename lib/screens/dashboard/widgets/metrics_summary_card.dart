@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import 'package:habit_control/shared/widgets/ui/app_card.dart';
+import 'package:habit_control/shared/widgets/ui/app_section_title.dart';
+
 class MetricSummaryItem {
   const MetricSummaryItem({required this.label, required this.value});
 
@@ -16,39 +19,43 @@ class MetricsSummaryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFF101826),
-        border: Border.all(color: const Color(0xFF334155)),
-      ),
+    return AppCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('TODAY\'S METRICS', style: theme.textTheme.titleMedium),
-          const SizedBox(height: 14),
-          ...metrics.map(
-            (metric) => Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      metric.label.toUpperCase(),
-                      style: theme.textTheme.bodySmall,
+        children: <Widget>[
+          const AppSectionTitle(
+            title: 'TODAY\'S METRICS',
+            subtitle: 'Main context values for the selected day',
+            icon: Icons.monitor_heart_outlined,
+          ),
+          const SizedBox(height: 16),
+          if (metrics.isEmpty)
+            Text(
+              'No metrics registered for this day.',
+              style: theme.textTheme.bodyMedium,
+            )
+          else
+            ...metrics.map(
+              (metric) => Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: Row(
+                  children: <Widget>[
+                    Expanded(
+                      child: Text(
+                        metric.label.toUpperCase(),
+                        style: theme.textTheme.bodySmall,
+                      ),
                     ),
-                  ),
-                  Text(
-                    metric.value,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: Colors.white,
+                    Text(
+                      metric.value,
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
         ],
       ),
     );

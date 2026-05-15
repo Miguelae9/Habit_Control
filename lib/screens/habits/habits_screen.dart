@@ -10,6 +10,8 @@ import 'package:habit_control/shared/state/habit_catalog_store.dart';
 import 'package:habit_control/shared/state/habit_day_store.dart';
 import 'package:habit_control/shared/widgets/lateral_menu/lateral_menu.dart';
 import 'package:habit_control/shared/widgets/online_badge.dart';
+import 'package:habit_control/shared/widgets/ui/app_card.dart';
+import 'package:habit_control/shared/widgets/ui/app_section_title.dart';
 import 'package:habit_control/shared/state/selected_day_store.dart';
 
 class HabitsScreen extends StatefulWidget {
@@ -90,16 +92,16 @@ class _HabitsScreenState extends State<HabitsScreen> {
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          title: const Text('Eliminar hábito'),
-          content: Text('¿Seguro que quieres eliminar "${habit.title}"?'),
+          title: const Text('Delete habit'),
+          content: Text('Are you sure you want to delete "${habit.title}"?'),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: const Text('Cancelar'),
+              child: const Text('Cancel'),
             ),
             ElevatedButton(
               onPressed: () => Navigator.of(dialogContext).pop(true),
-              child: const Text('Eliminar'),
+              child: const Text('Delete'),
             ),
           ],
         );
@@ -110,9 +112,9 @@ class _HabitsScreenState extends State<HabitsScreen> {
   }
 
   List<Widget> _buildHabitTiles({
-  required String dayKey,
-  required List<Habit> habits,
-}) {
+    required String dayKey,
+    required List<Habit> habits,
+  }) {
     final doneIds = context.watch<HabitDayStore>().doneForDay(dayKey);
 
     return habits.map((habit) {
@@ -122,7 +124,9 @@ class _HabitsScreenState extends State<HabitsScreen> {
         title: habit.title,
         streak: habit.streakText,
         active: isActive,
-        accent: isActive ? const Color(0xFF6CFAFF) : const Color(0xFF93A3B8),
+        accent: isActive
+            ? Theme.of(context).colorScheme.primary
+            : Theme.of(context).textTheme.bodyMedium?.color ?? Colors.grey,
         onTap: () {
           context.read<HabitDayStore>().toggleHabitForDay(
             dayKey: dayKey,
@@ -174,12 +178,11 @@ class _HabitsScreenState extends State<HabitsScreen> {
     return Scaffold(
       key: _scaffoldKey,
       backgroundColor: theme.scaffoldBackgroundColor,
-      drawer: const Drawer(
-        backgroundColor: Color.fromARGB(34, 0, 70, 221),
-        child: LateralMenu(),
-      ),
+      drawer: const Drawer(child: LateralMenu()),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showHabitDialog(),
+        backgroundColor: theme.colorScheme.primary,
+        foregroundColor: theme.colorScheme.onPrimary,
         child: const Icon(Icons.add),
       ),
       body: SafeArea(
@@ -191,56 +194,90 @@ class _HabitsScreenState extends State<HabitsScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Row(
-                  children: [
+                  children: <Widget>[
                     IconButton(
-                      icon: Icon(Icons.menu, color: textMain),
+                      icon: Icon(Icons.menu, color: theme.colorScheme.primary),
                       onPressed: _openDrawer,
                     ),
                     const Spacer(),
                     OnlineBadge(textColor: textMain),
                   ],
                 ),
-                const SizedBox(height: 20),
-                Center(
-                  child: CircularPercentIndicator(
-                    radius: 105,
-                    lineWidth: 14,
-                    percent: progresoDecimal,
-                    animation: true,
-                    animateFromLastPercent: true,
-                    animationDuration: 600,
-                    circularStrokeCap: CircularStrokeCap.round,
-                    backgroundColor: const Color(0xFF1E293B),
-                    progressColor: const Color(0xFF6CFAFF),
-                    center: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          '${(progresoDecimal * 100).toInt()}%',
-                          style: TextStyle(
-                            fontSize: 44,
-                            fontWeight: FontWeight.w800,
-                            color: textMain,
-                          ),
+
+                const SizedBox(height: 18),
+
+                AppCard(
+                  child: Column(
+                    children: <Widget>[
+                      const AppSectionTitle(
+                        title: 'HABITS',
+                        subtitle: 'Daily completion overview',
+                        icon: Icons.checklist,
+                      ),
+                      const SizedBox(height: 22),
+                      CircularPercentIndicator(
+                        radius: 100,
+                        lineWidth: 14,
+                        percent: progresoDecimal,
+                        animation: true,
+                        animateFromLastPercent: true,
+                        animationDuration: 600,
+                        circularStrokeCap: CircularStrokeCap.round,
+                        backgroundColor: theme.colorScheme.surface,
+                        progressColor: theme.colorScheme.primary,
+                        center: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: <Widget>[
+                            Text(
+                              '${(progresoDecimal * 100).toInt()}%',
+                              style: theme.textTheme.headlineLarge?.copyWith(
+                                fontSize: 42,
+                                color: textMain,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'COMPLETED',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                letterSpacing: 2,
+                                color: textMuted,
+                              ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'COMPLETED',
-                          style: TextStyle(
-                            fontSize: 11,
-                            letterSpacing: 2,
-                            color: textMuted,
-                          ),
-                        ),
-                      ],
-                    ),
+                      ),
+                      const SizedBox(height: 18),
+                      Text(
+                        '$completedToday of ${habits.length} habits completed',
+                        style: theme.textTheme.bodyMedium,
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 30),
-                Column(
-                  children: _buildHabitTiles(
-                    dayKey: selectedDayKey,
-                    habits: habits,
+
+                const SizedBox(height: 18),
+
+                AppCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      const AppSectionTitle(
+                        title: 'TODAY\'S HABITS',
+                        subtitle: 'Tap a habit to mark it as completed',
+                        icon: Icons.task_alt,
+                      ),
+                      const SizedBox(height: 16),
+                      if (habits.isEmpty)
+                        Text(
+                          'No habits created yet.',
+                          style: theme.textTheme.bodyMedium,
+                        )
+                      else
+                        ..._buildHabitTiles(
+                          dayKey: selectedDayKey,
+                          habits: habits,
+                        ),
+                    ],
                   ),
                 ),
               ],

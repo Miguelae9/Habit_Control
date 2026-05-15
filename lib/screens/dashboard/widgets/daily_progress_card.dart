@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import 'package:habit_control/shared/widgets/ui/app_card.dart';
+import 'package:habit_control/shared/widgets/ui/app_section_title.dart';
+
 class DailyProgressCard extends StatelessWidget {
   const DailyProgressCard({
     super.key,
@@ -24,34 +27,31 @@ class DailyProgressCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFF101826),
-        border: Border.all(color: const Color(0xFF334155)),
-      ),
+    return AppCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('DAILY PROGRESS', style: theme.textTheme.titleMedium),
-          const SizedBox(height: 12),
+        children: <Widget>[
+          const AppSectionTitle(
+            title: 'DAILY PROGRESS',
+            subtitle: 'Current habit completion',
+            icon: Icons.check_circle_outline,
+          ),
+          const SizedBox(height: 16),
           Text(
             '$completedHabits of $totalHabits habits completed',
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: Colors.white,
-              fontSize: 18,
+            style: theme.textTheme.bodyLarge?.copyWith(
+              fontWeight: FontWeight.w700,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
           ClipRRect(
             borderRadius: BorderRadius.circular(999),
             child: LinearProgressIndicator(
               value: _progress,
               minHeight: 8,
-              backgroundColor: const Color(0xFF1E293B),
-              valueColor: const AlwaysStoppedAnimation<Color>(
-                Color(0xFF64F6FF),
+              backgroundColor: theme.colorScheme.surface,
+              valueColor: AlwaysStoppedAnimation<Color>(
+                theme.colorScheme.primary,
               ),
             ),
           ),
