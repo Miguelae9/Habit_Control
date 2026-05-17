@@ -1,23 +1,23 @@
 import 'package:flutter/material.dart';
-import 'package:habit_control/shared/state/habit_catalog_store.dart';
+import 'package:habit_control/features/habits/viewmodels/habit_catalog_view_model.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-import 'package:habit_control/router/app_routes.dart';
-import 'package:habit_control/theme/app_theme.dart';
-import 'package:habit_control/shared/state/habit_day_store.dart';
-import 'package:habit_control/shared/state/daily_metrics_store.dart';
-import 'package:habit_control/shared/state/weather_store.dart';
-import 'package:habit_control/shared/state/selected_day_store.dart';
+import 'package:habit_control/core/router/app_routes.dart';
+import 'package:habit_control/core/theme/app_theme.dart';
+import 'package:habit_control/features/habits/viewmodels/habit_day_view_model.dart';
+import 'package:habit_control/features/input_log/viewmodels/metrics_view_model.dart';
+import 'package:habit_control/features/dashboard/viewmodels/weather_view_model.dart';
+import 'package:habit_control/core/state/selected_day_view_model.dart';
 
 import 'dart:async';
 
 /// Root application widget.
 ///
-/// Provides app-wide state via [MultiProvider] and configures routing using
-/// [MaterialApp.onGenerateRoute].
+/// Composes the dependency graph with [MultiProvider] and configures
+/// [MaterialApp] with a route guard that redirects unauthenticated users
+/// away from protected routes whenever the Firebase Auth state changes.
 class MyApp extends StatefulWidget {
-  /// Creates the root widget.
   const MyApp({super.key});
 
   @override
@@ -25,33 +25,22 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  late final HabitDayStore _habitStore;
-  late final DailyMetricsStore _metricsStore;
   late final StreamSubscription<User?> _authSub;
 
   @override
   void initState() {
     super.initState();
-    _habitStore = HabitDayStore()..loadLocal();
-    _metricsStore = DailyMetricsStore()..loadLocal();
-
-    // Rebuilds the widget tree when the Firebase Auth user changes so that route
-    // guarding decisions reflect the latest auth state.
     _authSub = FirebaseAuth.instance.authStateChanges().listen(_onAuthChanged);
   }
 
   void _onAuthChanged(User? user) {
     if (!mounted) return;
-    setState(_noop);
+    setState(() {});
   }
-
-  void _noop() {}
 
   @override
   void dispose() {
     _authSub.cancel();
-    _habitStore.dispose();
-    _metricsStore.dispose();
     super.dispose();
   }
 
@@ -59,16 +48,20 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider<HabitDayStore>.value(value: _habitStore),
-        ChangeNotifierProvider<DailyMetricsStore>.value(value: _metricsStore),
-        ChangeNotifierProvider<SelectedDayStore>(
-          create: (_) => SelectedDayStore(),
+        ChangeNotifierProvider<HabitDayViewModel>(
+          create: (_) => HabitDayViewModel()..loadLocal(),
         ),
-        ChangeNotifierProvider<HabitCatalogStore>(
-          create: (_) => HabitCatalogStore()..loadLocal(),
+        ChangeNotifierProvider<MetricsViewModel>(
+          create: (_) => MetricsViewModel()..loadLocal(),
         ),
-        ChangeNotifierProvider<WeatherStore>(
-          create: (_) => WeatherStore()..loadWeather(),
+        ChangeNotifierProvider<SelectedDayViewModel>(
+          create: (_) => SelectedDayViewModel(),
+        ),
+        ChangeNotifierProvider<HabitCatalogViewModel>(
+          create: (_) => HabitCatalogViewModel()..loadLocal(),
+        ),
+        ChangeNotifierProvider<WeatherViewModel>(
+          create: (_) => WeatherViewModel()..loadWeather(),
         ),
       ],
       child: MaterialApp(
@@ -86,16 +79,16 @@ class _MyAppState extends State<MyApp> {
   /// Applies a basic "protected routes" check based on whether
   /// [FirebaseAuth.currentUser] is non-null.
   static Route<dynamic> _onGenerateRoute(RouteSettings settings) {
-    final String name = settings.name ?? AppRoutes.home;
+    final String name = settings.name ?? AppRoutes.login;
 
     final bool exists = AppRoutes.map.containsKey(name);
-    final String resolved = exists ? name : AppRoutes.home;
+    final String resolved = exists ? name : AppRoutes.login;
 
     final bool isProtected = _isProtectedRoute(resolved);
     final bool isLoggedIn = FirebaseAuth.instance.currentUser != null;
 
     if (isProtected && !isLoggedIn) {
-      return _buildRoute(settings, AppRoutes.home);
+      return _buildRoute(settings, AppRoutes.login);
     }
 
     return _buildRoute(settings, resolved);
@@ -111,11 +104,11 @@ class _MyAppState extends State<MyApp> {
     return false;
   }
 
-  /// Builds a [MaterialPageRoute] for [routeName], falling back to `home`.
+  /// Builds a [MaterialPageRoute] for [routeName], falling back to `login`.
   static Route<dynamic> _buildRoute(RouteSettings settings, String routeName) {
     final builder = AppRoutes.map[routeName];
     if (builder == null) {
-      final fallback = AppRoutes.map[AppRoutes.home]!;
+      final fallback = AppRoutes.map[AppRoutes.login]!;
       return MaterialPageRoute(builder: fallback, settings: settings);
     }
     return MaterialPageRoute(builder: builder, settings: settings);

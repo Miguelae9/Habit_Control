@@ -31,7 +31,6 @@ dependencies:
   flutter:
     sdk: flutter
     # --- UI & Diseño ---
-  cupertino_icons: ^1.0.2
   google_fonts: ^6.1.0        # Fuentes (JetBrains Mono)
   fl_chart: ^0.66.0           # Gráficas (Requisito investigación)
   percent_indicator: ^4.2.3   # Círculo del Dashboard
@@ -51,7 +50,7 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^2.0.0
+  flutter_lints: ^5.0.0
   flutter_launcher_icons: ^0.13.1
 
 flutter_icons:

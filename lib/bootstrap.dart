@@ -9,6 +9,6 @@ import 'package:intl/date_symbol_data_local.dart';
 /// [DefaultFirebaseOptions.currentPlatform].
 Future<void> bootstrap() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await initializeDateFormatting('es_ES');
+  await initializeDateFormatting('en_US');
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 }
