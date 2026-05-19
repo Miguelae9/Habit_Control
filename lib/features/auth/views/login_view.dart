@@ -47,6 +47,21 @@ class _LoginViewState extends State<LoginView> {
     Navigator.pushReplacementNamed(context, AppRoutes.splash);
   }
 
+  Future<void> _loginWithGoogle() async {
+    final error = await _viewModel.signInWithGoogle();
+
+    if (!mounted) return;
+
+    if (error != null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error)));
+      return;
+    }
+
+    Navigator.pushReplacementNamed(context, AppRoutes.splash);
+  }
+
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
@@ -125,6 +140,17 @@ class _LoginViewState extends State<LoginView> {
                             onPressed: onPressed,
                           ),
 
+                          const SizedBox(height: 12),
+
+                          OutlinedButton.icon(
+                            onPressed: loading ? null : _loginWithGoogle,
+                            icon: const Text(
+                              'G',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            label: const Text('Continue with Google'),
+                          ),
+
                           const SizedBox(height: 14),
 
                           TextButton(
@@ -145,7 +171,7 @@ class _LoginViewState extends State<LoginView> {
                     const SizedBox(height: 20),
 
                     Text(
-                      'v1.9.0 [MVP_BUILD]',
+                      'v2.0.0 [MVP_BUILD]',
                       textAlign: TextAlign.center,
                       style: theme.textTheme.bodySmall?.copyWith(
                         fontSize: 10,

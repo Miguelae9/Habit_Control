@@ -1,16 +1,17 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:habit_control/features/settings/viewmodels/settings_view_model.dart';
 import 'package:provider/provider.dart';
 
+import 'package:habit_control/core/router/app_routes.dart';
 import 'package:habit_control/features/habits/viewmodels/habit_catalog_view_model.dart';
 import 'package:habit_control/features/habits/viewmodels/habit_day_view_model.dart';
 import 'package:habit_control/features/input_log/viewmodels/metrics_view_model.dart';
-import 'package:habit_control/core/router/app_routes.dart';
-import 'package:habit_control/shared/lateral_menu/lateral_menu.dart';
-import 'package:habit_control/shared/app_top_bar.dart';
+import 'package:habit_control/features/settings/viewmodels/settings_view_model.dart';
+import 'package:habit_control/features/settings/widgets/change_password_dialog.dart';
 import 'package:habit_control/features/settings/widgets/settings_info_tile.dart';
 import 'package:habit_control/features/settings/widgets/settings_section.dart';
+import 'package:habit_control/shared/app_top_bar.dart';
+import 'package:habit_control/shared/lateral_menu/lateral_menu.dart';
 
 class SettingsView extends StatefulWidget {
   const SettingsView({super.key});
@@ -20,7 +21,7 @@ class SettingsView extends StatefulWidget {
 }
 
 class _SettingsViewState extends State<SettingsView> {
-  static const String _appVersion = 'v1.9.0';
+  static const String _appVersion = 'v2.0.0';
 
   Future<void> _confirmSignOut() async {
     final bool shouldSignOut =
@@ -68,6 +69,21 @@ class _SettingsViewState extends State<SettingsView> {
     );
   }
 
+  Future<void> _openChangePassword() async {
+    final bool? changed = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext dialogContext) => const ChangePasswordDialog(),
+    );
+
+    if (!mounted) return;
+
+    if (changed == true) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Password updated successfully')),
+      );
+    }
+  }
+
   void _openCredits() {
     Navigator.pushNamed(context, AppRoutes.credits);
   }
@@ -102,10 +118,12 @@ class _SettingsViewState extends State<SettingsView> {
                           subtitle: user?.email ?? 'No email available',
                         ),
                         const SizedBox(height: 8),
-                        const SettingsInfoTile(
+                        SettingsInfoTile(
                           icon: Icons.lock_reset,
                           title: 'Change password',
-                          subtitle: 'Password reset is currently unavailable',
+                          subtitle: 'Update your account password',
+                          trailing: const Icon(Icons.chevron_right),
+                          onTap: _openChangePassword,
                         ),
                       ],
                     ),

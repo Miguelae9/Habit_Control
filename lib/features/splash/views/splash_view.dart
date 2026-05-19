@@ -86,7 +86,7 @@ class _SplashViewState extends State<SplashView> {
                 const SizedBox(height: 42),
 
                 Text(
-                  'v1.9.0 [MVP_BUILD]',
+                  'v2.0.0 [MVP_BUILD]',
                   textAlign: TextAlign.center,
                   style: theme.textTheme.bodySmall?.copyWith(
                     fontSize: 10,

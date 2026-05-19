@@ -43,7 +43,7 @@ class CreditsView extends StatelessWidget {
                       value: 'Miguel Ángel Pérez García',
                     ),
                     SizedBox(height: 10),
-                    _InfoLine(label: 'BUILD', value: 'v1.9.0'),
+                    _InfoLine(label: 'BUILD', value: 'v2.0.0'),
                   ],
                 ),
               ),
